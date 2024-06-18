@@ -14,16 +14,16 @@
         <worldbody>
     
             <body name='torso' childclass='torso'>
-                <geom name='shoulders' type='capsule' size='.09' fromto='.15 0 1.6 -.15 0 1.6'/>
-                <geom name='absL' type='capsule' size='.09' fromto='.15 0 1.6 0.05 0 1.05'/>
-                <geom name='absR' type='capsule' size='.09' fromto='-.15 0 1.6 -.05 0 1.05'/>
-                <geom name='legs' type='capsule' size='.135' fromto='0 0 1.05 0 0 0.05'/>
+                <geom name='shoulders' type='capsule' size='.075' fromto='.15 0 .9 -.15 0 .9'/>
+                <geom name='absL' type='capsule' size='.06' fromto='.15 0 .9 0.05 0 .35'/>
+                <geom name='absR' type='capsule' size='.06' fromto='-.15 0 .9 -.05 0 .35'/>
+                <geom name='legs' type='capsule' size='.115' fromto='0 0 .35 0 0 0.05'/>
     
-                <body name='leftarm' pos='0 0 1.6' euler='0 -1.57 1.57'>
+                <body name='leftarm' pos='0 0 .9' euler='0 -1.57 1.57'>
                     <include file="panda/assets/chainL.xml"/>
                 </body>
     
-                <body name='rightarm' pos='0 0 1.6' euler='0 1.57 1.57'>
+                <body name='rightarm' pos='0 0 .9' euler='0 1.57 1.57'>
                     <include file="panda/assets/chainR.xml"/>
                 </body>
     
