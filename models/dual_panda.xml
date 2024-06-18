@@ -1,0 +1,41 @@
+<mujoco model="dual-panda v01">
+
+        <include file="panda/assets/basic_scene.xml"/>
+        <include file="panda/assets/assets.xml"/>
+        <include file="panda/assets/gripper_assets.xml"/>
+        <compiler meshdir=""/>
+    
+        <default>
+            <default class='torso'>
+                <geom group='2' contype='0' conaffinity='0' rgba=".95 .99 .92 1"/>
+            </default>/
+        </default>
+    
+        <worldbody>
+    
+            <body name='torso' childclass='torso'>
+                <geom name='shoulders' type='capsule' size='.09' fromto='.15 0 1.6 -.15 0 1.6'/>
+                <geom name='absL' type='capsule' size='.09' fromto='.15 0 1.6 0.05 0 1.05'/>
+                <geom name='absR' type='capsule' size='.09' fromto='-.15 0 1.6 -.05 0 1.05'/>
+                <geom name='legs' type='capsule' size='.135' fromto='0 0 1.05 0 0 0.05'/>
+    
+                <body name='leftarm' pos='0 0 1.6' euler='0 -1.57 1.57'>
+                    <include file="panda/assets/chainL.xml"/>
+                </body>
+    
+                <body name='rightarm' pos='0 0 1.6' euler='0 1.57 1.57'>
+                    <include file="panda/assets/chainR.xml"/>
+                </body>
+    
+            </body>
+    
+        </worldbody>
+    
+        <include file='panda/assets/actuatorL.xml'/>
+        <include file='panda/assets/actuatorR.xml'/>
+        <include file='panda/assets/gripper_actuatorL.xml'/>
+        <include file='panda/assets/gripper_actuatorR.xml'/>
+    
+    
+    </mujoco>
+    

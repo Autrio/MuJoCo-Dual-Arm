@@ -1,0 +1,11 @@
+<mujocoinclude>
+    <actuator>
+        <position name="right_panda_joint1" joint="right_panda_joint1" class="panda" kp="870" forcerange="-87 87" ctrlrange="-2.9671 2.9671"/> <!-- velocity="2.1750" -->
+        <position name="right_panda_joint2" joint="right_panda_joint2" class="panda" kp="870" forcerange="-87 87" ctrlrange="-1.8326 1.8326"/> <!-- velocity="2.1750" -->
+        <position name="right_panda_joint3" joint="right_panda_joint3" class="panda" kp="870" forcerange="-87 87" ctrlrange="-2.9671 2.9671"/> <!-- velocity="2.1750" -->
+        <position name="right_panda_joint4" joint="right_panda_joint4" class="panda" kp="870" forcerange="-87 87" ctrlrange="-3.1416 0.0"/> <!-- velocity="2.1750" -->
+        <position name="right_panda_joint5" joint="right_panda_joint5" class="panda" kp="120" forcerange="-12 12" ctrlrange="-2.9671 2.9671"/> <!-- velocity="2.6100" -->
+        <position name="right_panda_joint6" joint="right_panda_joint6" class="panda" kp="120" forcerange="-12 12" ctrlrange="-0.0873 3.8223"/> <!-- velocity="2.6100" -->
+        <position name="right_panda_joint7" joint="right_panda_joint7" class="panda" kp="120" forcerange="-12 12" ctrlrange="-0.0873 3.8223"/> <!-- velocity="2.9671" -->
+    </actuator>
+</mujocoinclude>
