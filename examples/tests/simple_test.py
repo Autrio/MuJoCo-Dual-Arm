@@ -15,7 +15,7 @@ names = [robot.jnt(i).name for i in range(robot.njnt)];
 viewer = mjv.launch_passive(robot,data);
 while(viewer.is_running()):
         
-    print(data.body("right_panda_gripper").xpos);
+    print(data.site("end_effector1").xpos);
     mj.mj_step(robot,data);
     viewer.sync();
     # time.sleep(1);
