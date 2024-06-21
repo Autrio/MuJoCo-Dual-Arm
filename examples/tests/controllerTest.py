@@ -11,7 +11,7 @@ data = mujoco.MjData(model);
 
 integration_dt:float = 0.1
 
-damping: float = 1e-3
+damping: float = 1e-4
 
 Kpos: float = 100
 Kori: float = 100
@@ -20,8 +20,8 @@ gravity_compensation: bool = True
 
 dt: float = 0.002
 
-Kn = np.asarray([5.0, 5.0, 5.0, 5.0, 10.0, 10.0, 10.0,1.0,1.0,
-                 5.0, 5.0, 5.0, 5.0, 10.0, 10.0, 10.0,1.0,1.0])
+Kn = np.asarray([5.0, 5.0, 5.0, 5.0, 10.0, 10.0, 1.0,1.0,1.0,
+                 5.0, 5.0, 5.0, 5.0, 10.0, 10.0, 1.0,1.0,1.0])
 
 max_angvel = 0.785
 
@@ -104,8 +104,8 @@ def main() -> None:
     with mujoco.viewer.launch_passive(
         model=model,
         data=data,
-        # show_left_ui=False,
-        # show_right_ui=False,
+        show_left_ui=False,
+        show_right_ui=False,
     ) as viewer:
         # Reset the simulation.
         mujoco.mj_resetDataKeyframe(model, data, key_id)
