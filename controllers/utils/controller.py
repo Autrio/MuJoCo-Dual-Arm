@@ -67,12 +67,12 @@ class controller(object, metaclass = abc.ABCMeta):
             # self.J_pos = np.array(self.data.site(self.eef_name).jacp.reshape((3, -1))[:, len(self.data.qpos)])
             # self.J_ori = np.array(self.data.site(self.eef_name).jacr.reshape((3, -1))[:, len(self.data.qvel)])
 
-            mujoco.mj_jac(self.model, self.data,)
+            mujoco.mj_jacBody(self.model, self.data,self.J_pos,self.J_ori,self.model.body(self.eef_name).id)
 
             self.J_full = np.array(np.vstack([self.J_pos, self.J_ori]))
 
             mass_matrix = np.ndarray(shape=(self.model.nv, self.model.nv), dtype=np.float64, order="C")
-            mujoco.mj_fullM(self.model._model, mass_matrix, self.data.qM)
+            mujoco.mj_fullM(self.model, mass_matrix, self.data.qM)
             mass_matrix = np.reshape(mass_matrix, (len(self.data.qvel), len(self.data.qvel)))
             self.mass_matrix = mass_matrix[len(self.data.qvel), :][:, len(self.data.qvel)]
 
