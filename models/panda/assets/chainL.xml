@@ -44,62 +44,8 @@
 
                                     <!-- End Effector -->
                                     <body name="left_panda_gripper">
-                                        <geom pos="0 0 0.107" quat="0.92388 0 0 -0.382683" class="panda_viz" mesh="hand_viz"/>
-                                        <geom pos="0 0 0.107" quat="0.92388 0 0 -0.382683" class="panda_col" mesh="hand_col" mass="0.81909"/>
-
-                                        <body name="left_panda_leftfinger" pos="0 0 0.1654" quat="0.92388 0 0 -0.382683" childclass='panda_finger'>
-                                            <inertial pos="-1.57863e-05 0.0118731 0.0434103" quat="0.705868 0.0310348 -0.0314925 0.706962" mass="0.0927059" diaginertia="6.57134e-05 6.09611e-05 1.09932e-05" />
-                                            <joint name="left_panda_finger_joint1"  axis="0 1 0" type="slide" range="0 0.04" class="panda_finger"/>
-                                            <geom class="panda_viz" mesh="finger_viz"/>
-                                            <!-- <geom class="panda_col" mesh="finger_col"/> -->
-                                            <geom size="0.0070" fromto=".009 .006 .0875   -.009 .009 .0875" type="capsule" />
-                                            <geom size="0.0070" fromto=".009 .009 .0875   -.009 .006 .0875" type="capsule" />
-
-                                            <geom size="0.0075" fromto=".009 .007 .0775   -.009 .010 .0775" type="capsule" />
-                                            <geom size="0.0075" fromto=".009 .010 .0775   -.009 .007 .0775" type="capsule" />
-
-                                            <geom size="0.0082" fromto=".009 .008 .0675   -.009 .011 .0675" type="capsule" />
-                                            <geom size="0.0082" fromto=".009 .011 .0675   -.009 .008 .0675" type="capsule" />
-
-                                            <geom size="0.0090" fromto=".009 .009 .0575   -.009 .012 .0575" type="capsule" />
-                                            <geom size="0.0090" fromto=".009 .012 .0575   -.009 .009 .0575" type="capsule" />
-
-                                            <geom size="0.0100" fromto=".009 .0105 .0475   -.009 .0135 .0475" type="capsule" />
-                                            <geom size="0.0100" fromto=".009 .0135 .0475   -.009 .0105 .0475" type="capsule" />
-
-                                            <geom size="0.0110" fromto=".009 .012 .035   -.009 .015 .035" type="capsule" />
-                                            <geom size="0.0110" fromto=".009 .015 .035   -.009 .012 .035" type="capsule" />
-
-                                            <geom size="0.0185 0.0120 0.0175" pos="0 0.014 0.015" type="box" euler='.03 0 0' />
-
-                                        </body>
-                                        <body name="left_panda_rightfinger" pos="0 0 0.1654" quat="0.92388 0 0 -0.382683"  childclass='panda_finger'>
-                                            <inertial pos="1.57863e-05 -0.0118731 0.0434103" quat="0.705868 -0.0310348 0.0314925 0.706962" mass="0.0927059" diaginertia="6.57134e-05 6.09611e-05 1.09932e-05" />
-                                            <joint name="left_panda_finger_joint2" axis="0 -1 0" type="slide" range="0 0.04" class="panda_finger"/>
-                                            <geom quat="0 0 0 1" class="panda_viz" mesh="finger_viz"/>
-                                            <!-- <geom class="panda_col" mesh="finger_col"/> -->
-                                            <geom size="0.0070" fromto=".009 -.006 .0875   -.009 -.009 .0875" type="capsule" />
-                                            <geom size="0.0070" fromto=".009 -.009 .0875   -.009 -.006 .0875" type="capsule" />
-
-                                            <geom size="0.0075" fromto=".009 -.007 .0775   -.009 -.010 .0775" type="capsule" />
-                                            <geom size="0.0075" fromto=".009 -.010 .0775   -.009 -.007 .0775" type="capsule" />
-
-                                            <geom size="0.0082" fromto=".009 -.008 .0675   -.009 -.011 .0675" type="capsule" />
-                                            <geom size="0.0082" fromto=".009 -.011 .0675   -.009 -.008 .0675" type="capsule" />
-
-                                            <geom size="0.0090" fromto=".009 -.009 .0575   -.009 -.012 .0575" type="capsule" />
-                                            <geom size="0.0090" fromto=".009 -.012 .0575   -.009 -.009 .0575" type="capsule" />
-
-                                            <geom size="0.0100" fromto=".009 -.0105 .0475   -.009 -.0135 .0475" type="capsule" />
-                                            <geom size="0.0100" fromto=".009 -.0135 .0475   -.009 -.0105 .0475" type="capsule" />
-
-                                            <geom size="0.0110" fromto=".009 -.012 .035   -.009 -.015 .035" type="capsule" />
-                                            <geom size="0.0110" fromto=".009 -.015 .035   -.009 -.012 .035" type="capsule" />
-
-                                            <geom size="0.0185 0.0120 0.0175" pos="0 -.014 0.015" type="box" euler='-.03 0 0' />
-                                        </body>
+                                       <include file = "gripperL.xml" />
                                     </body>
-
                                 </body>
                             </body>
                         </body>

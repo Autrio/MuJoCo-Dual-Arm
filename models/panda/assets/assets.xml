@@ -29,11 +29,27 @@
         <mesh name="link7_dark_viz" file="../meshes/visual/link7_dark.stl" scale="1.01 1.01 1.01"/>
         <mesh name="hand_viz" file="../meshes/visual/hand.stl"/>
     </asset>
+    
+    <asset>
+        <mesh name="monitor_col" file="../meshes/collision/objects/monitor.stl" scale = "0.03 0.03 0.03"/>
+        <mesh name="monitor_viz" file="../meshes/visual/objects/monitor.stl" scale = "0.03 0.03 0.03"/>
+    </asset>
+
+    <default>
+        <default class = "object">
+            <default class="object_viz">
+                <geom contype="0" conaffinity="0" group="0" type="mesh" rgba=".92 .92 .95 1"/>
+            </default>
+            <default class="object_col">
+                <geom contype="1" conaffinity="1" group="3" type="mesh" rgba=".5 .6 .7 1"/>
+            </default>
+        </default>
+    </default>
 
     <default>
         <default class="panda">
             <joint pos="0 0 0" axis="0 0 1" limited="true"/>
-            <position forcelimited="true" ctrllimited="true" user="1002 40 2001 -0.005 0.005"/>
+            <general dyntype="none" biastype="affine" ctrlrange="-2.8973 2.8973" forcerange="-87 87"/>
             <default class="panda_viz">
                 <geom contype="0" conaffinity="0" group="0" type="mesh" rgba=".92 .92 .95 1"/>
             </default>

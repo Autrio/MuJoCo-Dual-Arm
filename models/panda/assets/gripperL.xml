@@ -1,0 +1,19 @@
+<mujoco>
+    <body name="left_panda_hand" pos="0 0 0.107" euler="0 0 -0.785">
+        <inertial pos="0 0 0" euler="0 0 0" mass="0.68" diaginertia="0.1 0.1 0.1" />
+        <geom class="panda_viz" mesh="hand_viz"/>
+        <geom class="panda_col" mesh="hand_col"/>
+    
+        <body name="left_panda_leftfinger" pos="0 0 0.0584" quat="1 0 0 0">
+            <joint name="left_panda_finger_joint1"  axis="0 1 0" type="slide" range="0 0.04" damping="100" armature='5'/>
+            <geom class="panda_viz" mesh="finger_viz"/>
+            <geom class="panda_col" mesh="finger_col" mass="0.01"/>
+        </body>
+    
+        <body name="left_panda_rightfinger" pos="0 0 0.0584" quat="1 0 0 0">
+            <joint name="left_panda_finger_joint2" axis="0 -1 0" type="slide" range="0 0.04" damping="100" armature='5'/>
+            <geom quat="0 0 0 1" class="panda_viz" mesh="finger_viz"/>
+            <geom quat="0 0 0 1" class="panda_col" mesh="finger_col" mass="0.01"/>
+        </body>
+    </body>
+    </mujoco>

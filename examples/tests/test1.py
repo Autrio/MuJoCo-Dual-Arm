@@ -5,17 +5,17 @@ import numpy as np
 import time
 
 
-model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/bimanual_panda.xml";
+model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/dual_panda.xml";
 model = mujoco.MjModel.from_xml_path(model_path);
 data = mujoco.MjData(model);
 
 
-integration_dt:float = 0.1
+integration_dt:float = 0.15
 
 damping: float = 0.07
 
-Kpos: float = 250000
-Kori: float = 250000
+Kpos: float = 25
+Kori: float = 25
 
 gravity_compensation: bool = True
 
@@ -32,7 +32,7 @@ def main() -> None:
     # Load the model and data.
 
     # Enable gravity compensation. Set to 0.0 to disable.
-    model.body_gravcomp = float(gravity_compensation)
+    model.body_gravcomp[:] = float(gravity_compensation)
     model.opt.timestep = dt
     # model.opt.gravity = 0.00
 
@@ -47,15 +47,13 @@ def main() -> None:
     # from the XML file. Feel free to comment out some joints to see the effect on
     # the controller.
     joint_names = [model.jnt(name).name for name in range(model.njnt)]
-
     actuator_names = [model.actuator(name).name for name in range(model.njnt)]
 
 
     dof_ids = np.array([model.joint(name).id for name in joint_names])
 
-
     dof_idsL = dof_ids[:9]
-    dof_idsR = dof_ids[9:18]
+    dof_idsR = dof_ids[9:]
 
     actuator_ids = np.array([model.actuator(name).id for name in actuator_names])
 
@@ -65,7 +63,7 @@ def main() -> None:
     # Initial joint configuration saved as a keyframe in the XML file.
     key_name = "home"
     key_id = model.key(key_name).id
-    q0 = model.key(key_name).qpos[:18]
+    q0 = model.key(key_name).qpos
 
     # Mocap body we will control with our mouse.
     mocap_nameL = "targetL"
@@ -79,10 +77,10 @@ def main() -> None:
 
     jacR = np.zeros((6, model.nv))
     jacL = np.zeros((6, model.nv))
-    jac = np.zeros((6, 18)) # the jacobian for the arms
+    jac = np.zeros((6, model.nv))
 
     diag = damping * np.eye(6)
-    eye = np.eye(18)
+    eye = np.eye(model.nv)
 
     twistL = np.zeros(6)
     twistR = np.zeros(6)
@@ -107,8 +105,8 @@ def main() -> None:
     with mujoco.viewer.launch_passive(
         model=model,
         data=data,
-        # show_left_ui=False,
-        # show_right_ui=False,
+        show_left_ui=False,
+        show_right_ui=False,
     ) as viewer:
         # Reset the simulation.
         mujoco.mj_resetDataKeyframe(model, data, key_id)
@@ -148,17 +146,17 @@ def main() -> None:
             mujoco.mj_jacSite(model, data, jacR[:3], jacR[3:], site_idR)
 
             jac[:,:9] = jacL[:,:9];
-            jac[:,9:18] = jacR[:,9:18];
+            jac[:,9:] = jacR[:,9:];
 
-            dq = np.zeros(model.nv)
+            dq = np.zeros(18)
 
             # Damped least squares.
             dq[:9] = jac[:,:9].T @ np.linalg.solve(jac[:,:9] @ jac[:,:9].T + diag, twistL)
-            dq[9:18] = jac[:,9:].T @ np.linalg.solve(jac[:,9:] @ jac[:,9:].T + diag, twistR)
+            dq[9:] = jac[:,9:].T @ np.linalg.solve(jac[:,9:] @ jac[:,9:].T + diag, twistR)
 
             # Nullspace control biasing joint velocities towards the home configuration.
 
-            dq[:18] += (eye - np.linalg.pinv(jac) @ jac) @ (Kn * (q0 - data.qpos[dof_ids[:18]]))
+            dq += (eye - np.linalg.pinv(jac) @ jac) @ (Kn * (q0 - data.qpos[dof_ids]))
 
             # Clamp maximum joint velocity.
             dq_abs_max = np.abs(dq).max()
@@ -168,10 +166,10 @@ def main() -> None:
             # Integrate joint velocities to obtain joint positions.
             q = data.qpos.copy()  # Note the copy here is important.
             mujoco.mj_integratePos(model, q, dq, integration_dt)
-            np.clip(q[:18], *model.jnt_range.T[:,:18], out=q[:18])
+            np.clip(q, *model.jnt_range.T, out=q)
 
             # Set the control signal and step the simulation.
-            data.ctrl[actuator_ids] = q[dof_ids[:18]]
+            data.ctrl[actuator_ids] = q[dof_ids]
             mujoco.mj_step(model, data)
 
             viewer.sync()

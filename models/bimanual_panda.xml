@@ -13,20 +13,27 @@
     <worldbody>
 
         <body name='torso' childclass='torso'>
-            <!-- <geom name='shoulders' type='capsule' size='.075' fromto='.15 0 .9 -.15 0 .9' />
+            <geom name='shoulders' type='capsule' size='.075' fromto='.15 0 .9 -.15 0 .9' />
             <geom name='absL' type='capsule' size='.06' fromto='.15 0 .9 0.05 0 .35' />
             <geom name='absR' type='capsule' size='.06' fromto='-.15 0 .9 -.05 0 .35' />
-            <geom name='legs' type='capsule' size='.115' fromto='0 0 .35 0 0 0.05' /> -->
+            <geom name='legs' type='capsule' size='.115' fromto='0 0 .35 0 0 0.05' />
 
-            <body name='leftarm' pos='-0.6 0 0' euler='0 0 1.57'>
+            <body name='leftarm' pos='0 0 .9' euler='0 -1.57 1.57'>
                 <include file="panda/assets/chainL.xml" />
             </body>
 
-            <body name='rightarm' pos='0.6 0 0' euler='0 0 1.57'>
+            <body name='rightarm' pos='0 0 .9' euler='0 1.57 1.57'>
                 <include file="panda/assets/chainR.xml" />
             </body>
 
         </body>
+
+        <!-- <body name = "collision_object" pos = "0.0 1.0 0.0" quat="0 0 0 1">
+            <joint type="free" name="object_virtual_joint" pos = "0.0 1.0 0.0" damping="10"/>
+            <geom class="object_viz" mesh="monitor_viz"/>
+            <geom class="object_col" mesh="monitor_col"/>
+            <inertial pos="0 0 0" mass="1.0" diaginertia="2 2 2"/>
+        </body> -->
 
     </worldbody>
 

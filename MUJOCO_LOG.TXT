@@ -4,3 +4,6 @@ WARNING: Nan, Inf or huge value in QPOS at DOF 9. The simulation is unstable. Ti
 Fri Jun 21 13:19:52 2024
 WARNING: Nan, Inf or huge value in QVEL at DOF 0. The simulation is unstable. Time = 0.0060.
 
+Sat Jun 22 14:54:04 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 0. The simulation is unstable. Time = 0.0140.
+
