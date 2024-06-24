@@ -5,17 +5,17 @@ import numpy as np
 import time
 
 
-model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/bimanual_panda.xml";
+model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/dual_panda.xml";
 model = mujoco.MjModel.from_xml_path(model_path);
 data = mujoco.MjData(model);
 
 
 integration_dt:float = 0.1
 
-damping: float = 0.07
+damping: float = 1e-2
 
-Kpos: float = 250000
-Kori: float = 250000
+Kpos: float = 50
+Kori: float = 50
 
 gravity_compensation: bool = True
 
@@ -24,7 +24,26 @@ dt: float = 0.002
 Kn = np.asarray([10.0, 10.0, 10.0, 10.0, 5.0, 5.0, 1.0,1.0,1.0,
                  10.0, 10.0, 10.0, 10.0, 5.0, 5.0, 1.0,1.0,1.0])
 
-max_angvel = 0.785
+max_angvel = 3.15
+
+def gripperCtrl(state,eef):
+    if eef=="both":
+        if(state=="open"):
+            data.ctrl[7:9]=0.04;   #open L gripper
+            data.ctrl[16:18]=0.04; #open R gripper
+        elif(state=="close"):
+            data.ctrl[7:9]=0.0;   #close L gripper
+            data.ctrl[16:18]=0.0; #close R gripper
+    if eef=="left":
+        if(state=="open"):
+            data.ctrl[7:9]=0.04;   #open L gripper
+        elif(state=="close"):
+            data.ctrl[7:9]=0.0;   #close L gripper
+    if eef=="right":
+        if(state=="open"):
+            data.ctrl[16:18]=0.04; #open R gripper
+        elif(state=="close"):
+            data.ctrl[16:18]=0.0; #close R gripper        
 
 def main() -> None:
     assert mujoco.__version__ >= "3.1.0", "Please upgrade to mujoco 3.1.0 or later."
@@ -48,7 +67,7 @@ def main() -> None:
     # the controller.
     joint_names = [model.jnt(name).name for name in range(model.njnt)]
 
-    actuator_names = [model.actuator(name).name for name in range(model.njnt)]
+    actuator_names = [model.actuator(name).name for name in range(model.njnt-1)]
 
 
     dof_ids = np.array([model.joint(name).id for name in joint_names])
@@ -97,9 +116,10 @@ def main() -> None:
     error_quatR = np.zeros(4)
 
        # Define a trajectory for the end-effector site to follow.
-    def circle(t: float, r: float, h: float, k: float, f: float) -> np.ndarray:
+
+    def makecircle(t: float, r: float, h: float, k: float, f: float) -> np.ndarray:
         """Return the (x, y) coordinates of a circle with radius r centered at (h, k)
-    as a function of time t and frequency f."""
+        as a function of time t and frequency f."""
         x = r * np.cos(2 * np.pi * f * t) + h
         y = r * np.sin(2 * np.pi * f * t) + k
         return np.array([x, y])
@@ -107,8 +127,8 @@ def main() -> None:
     with mujoco.viewer.launch_passive(
         model=model,
         data=data,
-        # show_left_ui=False,
-        # show_right_ui=False,
+        show_left_ui=False,
+        show_right_ui=False,
     ) as viewer:
         # Reset the simulation.
         mujoco.mj_resetDataKeyframe(model, data, key_id)
@@ -119,11 +139,19 @@ def main() -> None:
         # Enable site frame visualization.
         viewer.opt.frame = mujoco.mjtFrame.mjFRAME_SITE
 
+        tolerance = 0.175
+        errL = 1000
+        errR = 1000
+
+
         while viewer.is_running():
             step_start = time.time()
 
             # Set the target position of the end-effector site.
-            #data.mocap_pos[mocap_id, 0:2] = circle(data.time, 0.2, 0.1, 0.1, 0.5)
+            # if(errL<tolerance and errR<tolerance):
+            #     data.mocap_pos[mocap_idL, 0:2] = makecircle(data.time, 0.2, -0.3, 0.2, 0.5)
+            #     data.mocap_pos[mocap_idR, 0:2] = makecircle(data.time, 0.2, 0.3, 0.2, 0.5)
+
             
             # Spatial velocity (aka twist).
             dxL = data.mocap_pos[mocap_idL] - data.site(site_idL).xpos
@@ -132,7 +160,7 @@ def main() -> None:
             mujoco.mju_negQuat(site_quat_conjL, site_quatL)
             mujoco.mju_mulQuat(error_quatL, data.mocap_quat[mocap_idL], site_quat_conjL)
             mujoco.mju_quat2Vel(twistL[3:], error_quatL, 1.0)
-            twistL[3:] *= Kori / integration_dt
+            twistL[3:] *= Kori / integration_dt 
 
             dxR = data.mocap_pos[mocap_idR] - data.site(site_idR).xpos
             twistR[:3] = Kpos * dxR / integration_dt
@@ -142,6 +170,8 @@ def main() -> None:
             mujoco.mju_quat2Vel(twistR[3:], error_quatR, 1.0)
             twistR[3:] *= Kori / integration_dt
 
+            errL = np.linalg.norm(dxL)
+            errR = np.linalg.norm(dxR)
 
             # Jacobian.
             mujoco.mj_jacSite(model, data, jacL[:3], jacL[3:], site_idL)    
@@ -172,7 +202,9 @@ def main() -> None:
 
             # Set the control signal and step the simulation.
             data.ctrl[actuator_ids] = q[dof_ids[:18]]
+            gripperCtrl("open","both")
             mujoco.mj_step(model, data)
+
 
             viewer.sync()
             time_until_next_step = dt - (time.time() - step_start)

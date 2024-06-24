@@ -34,7 +34,7 @@ def main() -> None:
     # Enable gravity compensation. Set to 0.0 to disable.
     model.body_gravcomp[:] = float(gravity_compensation)
     model.opt.timestep = dt
-    # model.opt.gravity = 0.00
+    model.opt.gravity = 0.00
 
     # End-effector site we wish to control.
     site_nameL = "end_effector"
