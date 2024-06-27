@@ -15,8 +15,8 @@ impedance_pos = np.asarray([100.0, 100.0, 100.0])  # [N/m]
 impedance_ori = np.asarray([200.0, 200.0, 200.0])  # [Nm/rad]
 
 # Joint impedance control gains.
-Kp_null = np.asarray([7.50, 7.50, 5.0, 5.0, 4.0, 2.50, 2.50, 1.0, 1.0,
-                      7.50, 7.50, 5.0, 5.0, 4.0, 2.50, 2.50, 1.0, 1.0])
+Kp_null = np.asarray([10.0, 10.0, 5.0, 5.0, 4.0, 2.50, 2.50, 1.0, 1.0,
+                      10.0, 10.0, 5.0, 5.0, 4.0, 2.50, 2.50, 1.0, 1.0])
 
 # Damping ratio for both Cartesian and joint impedance control.
 damping_ratio = 1.3
