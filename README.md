@@ -11,7 +11,7 @@ python3 -m mujoco.viewer --mjcf=/path/to/model/file.xml
 
 
 ```console
-python3 -m examples.tests.controllerTest
+python3 -m examples.tests.JntSpcTest
 ```
 
 **NOTE: Support DEPRECIATED**
