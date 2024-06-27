@@ -10,21 +10,34 @@ model = mujoco.MjModel.from_xml_path(model_path);
 data = mujoco.MjData(model);
 
 
-integration_dt:float = 0.1
+# Cartesian impedance control gains.
+impedance_pos = np.asarray([100.0, 100.0, 100.0])  # [N/m]
+impedance_ori = np.asarray([200.0, 200.0, 200.0])  # [Nm/rad]
 
-damping: float = 1e-2
+# Joint impedance control gains.
+Kp_null = np.asarray([7.50, 7.50, 5.0, 5.0, 4.0, 2.50, 2.50, 1.0, 1.0,
+                      7.50, 7.50, 5.0, 5.0, 4.0, 2.50, 2.50, 1.0, 1.0])
 
-Kpos: float = 50
-Kori: float = 50
+# Damping ratio for both Cartesian and joint impedance control.
+damping_ratio = 1.3
 
+# Gains for the twist computation. These should be between 0 and 1. 0 means no
+# movement, 1 means move the end-effector to the target in one integration step.
+Kpos: float = 1
+
+# Gain for the orientation component of the twist computation. This should be
+# between 0 and 1. 0 means no movement, 1 means move the end-effector to the target
+# orientation in one integration step.
+Kori: float = 1
+
+# Integration timestep in seconds.
+integration_dt: float = 0.1
+
+# Whether to enable gravity compensation.
 gravity_compensation: bool = True
 
+# Simulation timestep in seconds.
 dt: float = 0.002
-
-Kn = np.asarray([10.0, 10.0, 10.0, 10.0, 5.0, 5.0, 1.0,1.0,1.0,
-                 10.0, 10.0, 10.0, 10.0, 5.0, 5.0, 1.0,1.0,1.0])
-
-max_angvel = 3.15
 
 def gripperCtrl(state,eef):
     if eef=="both":
@@ -45,15 +58,18 @@ def gripperCtrl(state,eef):
         elif(state=="close"):
             data.ctrl[16:18]=0.0; #close R gripper        
 
+
 def main() -> None:
     assert mujoco.__version__ >= "3.1.0", "Please upgrade to mujoco 3.1.0 or later."
 
-    # Load the model and data.
-
-    # Enable gravity compensation. Set to 0.0 to disable.
-    model.body_gravcomp = float(gravity_compensation)
     model.opt.timestep = dt
-    # model.opt.gravity = 0.00
+
+    # Compute damping and stiffness matrices.
+    damping_pos = damping_ratio * 2 * np.sqrt(impedance_pos)
+    damping_ori = damping_ratio * 2 * np.sqrt(impedance_ori)
+    Kp = np.concatenate([impedance_pos, impedance_ori], axis=0)
+    Kd = np.concatenate([damping_pos, damping_ori], axis=0)
+    Kd_null = damping_ratio * 2 * np.sqrt(Kp_null)
 
     # End-effector site we wish to control.
     site_nameL = "end_effector"
@@ -100,7 +116,10 @@ def main() -> None:
     jacL = np.zeros((6, model.nv))
     jac = np.zeros((6, 18)) # the jacobian for the arms
 
-    diag = damping * np.eye(6)
+    M_all = np.zeros((model.nv, model.nv))
+
+    Mx = np.zeros((6, 6))
+
     eye = np.eye(18)
 
     twistL = np.zeros(6)
@@ -115,14 +134,6 @@ def main() -> None:
     error_quatL = np.zeros(4)
     error_quatR = np.zeros(4)
 
-       # Define a trajectory for the end-effector site to follow.
-
-    def makecircle(t: float, r: float, h: float, k: float, f: float) -> np.ndarray:
-        """Return the (x, y) coordinates of a circle with radius r centered at (h, k)
-        as a function of time t and frequency f."""
-        x = r * np.cos(2 * np.pi * f * t) + h
-        y = r * np.sin(2 * np.pi * f * t) + k
-        return np.array([x, y])
 
     with mujoco.viewer.launch_passive(
         model=model,
@@ -139,19 +150,8 @@ def main() -> None:
         # Enable site frame visualization.
         viewer.opt.frame = mujoco.mjtFrame.mjFRAME_SITE
 
-        tolerance = 0.175
-        errL = 1000
-        errR = 1000
-
-
         while viewer.is_running():
             step_start = time.time()
-
-            # Set the target position of the end-effector site.
-            # if(errL<tolerance and errR<tolerance):
-            #     data.mocap_pos[mocap_idL, 0:2] = makecircle(data.time, 0.2, -0.3, 0.2, 0.5)
-            #     data.mocap_pos[mocap_idR, 0:2] = makecircle(data.time, 0.2, 0.3, 0.2, 0.5)
-
             
             # Spatial velocity (aka twist).
             dxL = data.mocap_pos[mocap_idL] - data.site(site_idL).xpos
@@ -170,9 +170,6 @@ def main() -> None:
             mujoco.mju_quat2Vel(twistR[3:], error_quatR, 1.0)
             twistR[3:] *= Kori / integration_dt
 
-            errL = np.linalg.norm(dxL)
-            errR = np.linalg.norm(dxR)
-
             # Jacobian.
             mujoco.mj_jacSite(model, data, jacL[:3], jacL[3:], site_idL)    
             mujoco.mj_jacSite(model, data, jacR[:3], jacR[3:], site_idR)
@@ -180,31 +177,37 @@ def main() -> None:
             jac[:,:9] = jacL[:,:9];
             jac[:,9:18] = jacR[:,9:18];
 
-            dq = np.zeros(model.nv)
+            # Compute the task-space inertia matrix.
+            mujoco.mj_solveM(model, data, M_all, np.eye(model.nv))
+            M_inv=M_all[:18,:18];
+            Mx_inv = jac @ M_inv @ jac.T
 
-            # Damped least squares.
-            dq[:9] = jac[:,:9].T @ np.linalg.solve(jac[:,:9] @ jac[:,:9].T + diag, twistL)
-            dq[9:18] = jac[:,9:].T @ np.linalg.solve(jac[:,9:] @ jac[:,9:].T + diag, twistR)
+            if abs(np.linalg.det(Mx_inv)) >= 1e-2:
+                Mx = np.linalg.inv(Mx_inv)
+            else:
+                Mx = np.linalg.pinv(Mx_inv, rcond=1e-2)
+            
+            
+            # Compute generalized forces.
+            tau = np.zeros(18)
 
-            # Nullspace control biasing joint velocities towards the home configuration.
+            tau[:9] = jac[:,:9].T @ Mx @ (Kp * twistL - Kd * (jac[:,:9] @ data.qvel[dof_ids[:9]]))
+            tau[9:18] = jac[:,9:18].T @ Mx @ (Kp * twistR - Kd * (jac[:,9:18] @ data.qvel[dof_ids[9:18]]))
 
-            dq[:18] += (eye - np.linalg.pinv(jac) @ jac) @ (Kn * (q0 - data.qpos[dof_ids[:18]]))
 
-            # Clamp maximum joint velocity.
-            dq_abs_max = np.abs(dq).max()
-            if dq_abs_max > max_angvel:
-                dq *= max_angvel / dq_abs_max
+            Jbar = M_inv @ jac.T @ Mx
+            
+            ddq = Kp_null * (q0 - data.qpos[dof_ids[:18]]) - Kd_null * data.qvel[dof_ids[:18]]
+            tau += (np.eye(model.nv-6) - jac.T @ Jbar.T) @ ddq
 
-            # Integrate joint velocities to obtain joint positions.
-            q = data.qpos.copy()  # Note the copy here is important.
-            mujoco.mj_integratePos(model, q, dq, integration_dt)
-            np.clip(q[:18], *model.jnt_range.T[:,:18], out=q[:18])
+            # Add gravity compensation.
+            if gravity_compensation:
+                tau += data.qfrc_bias[dof_ids[:18]]
 
             # Set the control signal and step the simulation.
-            data.ctrl[actuator_ids] = q[dof_ids[:18]]
+            data.ctrl[actuator_ids] = tau[actuator_ids]
             gripperCtrl("open","both")
             mujoco.mj_step(model, data)
-
 
             viewer.sync()
             time_until_next_step = dt - (time.time() - step_start)
