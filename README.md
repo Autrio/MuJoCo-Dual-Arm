@@ -7,8 +7,17 @@ In your working directory,
 python3 -m mujoco.viewer --mjcf=/path/to/model/file.xml
 
 ```
-For Kinematics based Impedance Control:
+## For Kinematics based Impedance Control:
+
+
 ```console
 python3 -m examples.tests.controllerTest
+```
+
+**NOTE: Support DEPRECIATED**
+
+## For Dynamic Task Space Control:
+```console
+python3 -m examples.tests.OpSpcTest
 ```
 -Adapted from https://github.com/kevinzakka/mjctrl/tree/main
