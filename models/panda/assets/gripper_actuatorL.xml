@@ -1,6 +1,6 @@
 <mujocoinclude>
     <actuator>
-        <position name="L_gripper_finger_joint1" joint="left_panda_finger_joint1" class="panda_finger" kp="500" forcerange="-70 70" ctrlrange="0 0.04"/> velocity=".2"
-        <position name="L_gripper_finger_joint2" joint="left_panda_finger_joint2" class="panda_finger" kp="500" forcerange="-70 70" ctrlrange="0 0.04"/> velocity=".2"
+        <position name="L_gripper_finger_joint1" joint="left_panda_finger_joint1" class="panda_finger" kp="5000" forcerange="-7000 7000" ctrlrange="0 0.04"/> velocity=".2"
+        <position name="L_gripper_finger_joint2" joint="left_panda_finger_joint2" class="panda_finger" kp="5000" forcerange="-7000 7000" ctrlrange="0 0.04"/> velocity=".2"
     </actuator>
 </mujocoinclude>

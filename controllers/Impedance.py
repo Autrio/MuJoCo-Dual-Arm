@@ -115,8 +115,8 @@ class Impedance:
         mujoco.mju_quat2Vel(self.twistL[3:], self.error_quatL, 1.0)
         self.twistL[3:] *= self.Kori / self.integration_dt 
 
-        dxR = self.data.mocap_pos[self.mocap_idR] - self.data.site(self.site_idR).xpos
-        self.twistR[:3] = self.Kpos * dxR / self.integration_dt
+        self.dxR = self.data.mocap_pos[self.mocap_idR] - self.data.site(self.site_idR).xpos
+        self.twistR[:3] = self.Kpos * self.dxR / self.integration_dt
         mujoco.mju_mat2Quat(self.site_quatR, self.data.site(self.site_idR).xmat)
         mujoco.mju_negQuat(self.site_quat_conjR, self.site_quatR)
         mujoco.mju_mulQuat(self.error_quatR, self.data.mocap_quat[self.mocap_idR], self.site_quat_conjR)
@@ -168,7 +168,7 @@ class Impedance:
     def gripperCtrl(self,state,eef):
         if eef=="both":
             if(state=="open"):
-                self.data.ctrl[7:9]=0.04;   #open L gripper
+                self.data.ctrl[7:9]=10;   #open L gripper
                 self.data.ctrl[16:18]=0.04; #open R gripper
             elif(state=="close"):
                 self.data.ctrl[7:9]=0.0;   #close L gripper

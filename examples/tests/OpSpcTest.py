@@ -3,9 +3,22 @@ import mujoco.viewer as viewer
 
 import numpy as np
 import time
+import argparse as ap
+
+parser = ap.ArgumentParser(prog="OpSpcTest",
+                           description="Testing code to verify operational space control for two franka panda arms")
+
+parser.add_argument("-d","--model",type=str,help="""Choose variant of dual panda arms.
+                    'dual' for individual separate arms, 'bimanual' for arms connected
+                     to a torso at shoulder joint. Default is 'dual'""")
+
+args = parser.parse_args()
 
 
-model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/dual_panda.xml";
+if(args.model == "bimanual"):
+    model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/bimanual_panda.xml";
+else:
+    model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/dual_panda.xml";
 model = mujoco.MjModel.from_xml_path(model_path);
 data = mujoco.MjData(model);
 
@@ -15,8 +28,8 @@ impedance_pos = np.asarray([100.0, 100.0, 100.0])  # [N/m]
 impedance_ori = np.asarray([200.0, 200.0, 200.0])  # [Nm/rad]
 
 # Joint impedance control gains.
-Kp_null = np.asarray([10.0, 10.0, 5.0, 5.0, 4.0, 2.50, 2.50, 1.0, 1.0,
-                      10.0, 10.0, 5.0, 5.0, 4.0, 2.50, 2.50, 1.0, 1.0])
+Kp_null = np.asarray([50.0, 50.0, 25.0, 25.0, 12.5, 5.0, 2.0, 2.0, 2.0,
+                      50.0, 50.0, 25.0, 25.0, 12.5, 5.0, 2.0, 2.0, 2.0])
 
 # Damping ratio for both Cartesian and joint impedance control.
 damping_ratio = 1.3
@@ -213,6 +226,9 @@ def main() -> None:
             time_until_next_step = dt - (time.time() - step_start)
             if time_until_next_step > 0:
                 time.sleep(time_until_next_step)
+
+    print(data.mocap_pos[mocap_idL],data.mocap_quat[mocap_idL])
+    print(data.mocap_pos[mocap_idR],data.mocap_quat[mocap_idR])
 
 
 if __name__ == "__main__":

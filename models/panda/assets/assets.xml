@@ -67,7 +67,7 @@
             </default>
              <default class="panda_finger">
                 <joint damping="10" armature='5'/>
-                <geom friction="1 0.5 0.0001" solref="0.01 1" solimp="0.8 0.9 0.001" margin="0.001" user="0" rgba="0.5 0.6 0.7 .4" contype="1" conaffinity="0" condim="6" group="3" />
+                <geom friction="1000 1000 1000" user="0" rgba="0.5 0.6 0.7 .4" contype="1" conaffinity="0" condim="6" group="3" />
                 <position user="1002 40 2001 -0.0001 0.0001"/>
             </default>
         </default>
