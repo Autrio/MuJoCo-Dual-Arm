@@ -7,7 +7,7 @@ In the repository directory directory,
 python3 -m mujoco.viewer --mjcf=/full/path/to/model/file.xml
 ```
 
-# Model Select Parameter:
+## Model Select Parameter:
 - `-d dual` or `--model dual` for Two separated Panda arms 
 - `-d bimanual` or `--model bimanual` for Two Panda Arms connected at shoulder Joints to a torso
 
