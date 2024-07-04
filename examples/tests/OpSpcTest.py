@@ -28,20 +28,20 @@ impedance_pos = np.asarray([100.0, 100.0, 100.0])  # [N/m]
 impedance_ori = np.asarray([200.0, 200.0, 200.0])  # [Nm/rad]
 
 # Joint impedance control gains.
-Kp_null = np.asarray([50.0, 50.0, 25.0, 25.0, 12.5, 5.0, 2.0, 2.0, 2.0,
-                      50.0, 50.0, 25.0, 25.0, 12.5, 5.0, 2.0, 2.0, 2.0])
+Kp_null = np.asarray([70.0, 70.0, 35.0, 35.0, 12.5, 10.0, 2.0, 2.0, 2.0,
+                      70.0, 70.0, 35.0, 35.0, 12.5, 10.0, 2.0, 2.0, 2.0])
 
 # Damping ratio for both Cartesian and joint impedance control.
 damping_ratio = 1.3
 
 # Gains for the twist computation. These should be between 0 and 1. 0 means no
 # movement, 1 means move the end-effector to the target in one integration step.
-Kpos: float = 1
+Kpos: float = 4.3
 
 # Gain for the orientation component of the twist computation. This should be
 # between 0 and 1. 0 means no movement, 1 means move the end-effector to the target
 # orientation in one integration step.
-Kori: float = 1
+Kori: float = 4.3
 
 # Integration timestep in seconds.
 integration_dt: float = 0.1
