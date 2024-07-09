@@ -172,47 +172,14 @@ class Impedance:
                 self.data.ctrl[16:18]=0.04; #open R gripper
             elif(state=="close"):
                 self.data.ctrl[7:9]=0.0;   #close L gripper
-                self.data.ctrl[16:18]=0.0; #close R gripper#set mocap pose to desired trajectory point for custom trajectory
-        if(erL<tolerance and erR < tolerance and i<=1500 and stage==1):
-            data.mocap_pos[controller.mocap_idL] = DtrajL[i]
-            data.mocap_pos[controller.mocap_idR] = DtrajR[i]
-            # contraint check -- to be implemented for dual arm 
-            # if true update to next traj point
-            # else set current as goal position and wait for controller to resolve error
-            i+=1
-            if(i==1500):
-                stage+=1
-                AtrajL = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idL],0.5);
-                AtrajR = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idR],0.5);
-
-
-        if(erL<tolerance and erR < tolerance and j<=1500 and stage==2):
-            data.mocap_pos[controller.mocap_idL] = AtrajL[j]
-            data.mocap_pos[controller.mocap_idR] = AtrajR[j]
-            j+=1
-            if(j==1500):
-                stage+=1
+                self.data.ctrl[16:18]=0.0; #close R gripper
         if eef=="left":
             if(state=="open"):
                 self.data.ctrl[7:9]=0.04;   #open L gripper
             elif(state=="close"):
-                self.data.ctrl[7:9]=0.0;   #close L gripper#set mocap pose to desired trajectory point for custom trajectory
-        if(erL<tolerance and erR < tolerance and i<=1500 and stage==1):
-            data.mocap_pos[controller.mocap_idL] = DtrajL[i]
-            data.mocap_pos[controller.mocap_idR] = DtrajR[i]
-            # contraint check -- to be implemented for dual arm 
-            # if true update to next traj point
-            # else set current as goal position and wait for controller to resolve error
-            i+=1
-            if(i==1500):
-                stage+=1
-                AtrajL = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idL],0.5);
-                AtrajR = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idR],0.5);
-
-
-        if(erL<tolerance and erR < tolerance and j<=1500 and stage==2):
-            data.mocap_pos[controller.mocap_idL] = AtrajL[j]
-            data.mocap_pos[controller.mocap_idR] = AtrajR[j]
-            j+=1
-            if(j==1500):
-                stage+=1
+                self.data.ctrl[7:9]=0.0;   #close L gripper
+        if eef=="right":
+            if(state=="open"):
+                self.data.ctrl[16:18]=0.04; #open R gripper
+            elif(state=="close"):
+                self.data.ctrl[16:18]=0.0; #close R gripper

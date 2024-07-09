@@ -93,14 +93,28 @@ def main() -> None:
 
     stage = 1
 
-    DtrajL = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idL],0.268);
-    DtrajR = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idR],0.2);
+    # DtrajL = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idL],0.268);
+    # DtrajR = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idR],0.2);
+
+    DtrajL = []
+    DtrajR = []
+
+    trajfile = open("/home/autrio/data/TRAJECTORY_LOG.TXT",'r');
+    traj = trajfile.readlines();
+    for t in traj:
+        t = t.split(" ")
+        t.pop()
+        DtrajL.append(t[:7])
+        DtrajR.append(t[7:])
+
 
     while viewer.is_running():
         #set mocap pose to desired trajectory point for custom trajectory
         if(erL<tolerance and erR < tolerance and i<=1500 and stage==1):
-            data.mocap_pos[controller.mocap_idL] = DtrajL[i]
-            data.mocap_pos[controller.mocap_idR] = DtrajR[i]
+            data.mocap_pos[controller.mocap_idL] = DtrajL[i][:3]
+            data.mocap_pos[controller.mocap_idR] = DtrajR[i][:3]
+            data.mocap_quat[controller.mocap_idL] = DtrajL[i][3:]
+            data.mocap_quat[controller.mocap_idR] = DtrajR[i][3:]
             # contraint check -- to be implemented for dual arm 
             # if true update to next traj point
             # else set current as goal position and wait for controller to resolve error

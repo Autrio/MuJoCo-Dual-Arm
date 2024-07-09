@@ -34,5 +34,3 @@ python3 -m examples.pnp -d dual
 - Fix gripper command and actuation to prevent slipping
 - Adjust to optimal gain parameters
 - Trajectory optimisation and motion planning
-
--Adapted from https://github.com/kevinzakka/mjctrl/tree/main
