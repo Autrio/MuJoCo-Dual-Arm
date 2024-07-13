@@ -106,6 +106,9 @@ class Impedance:
 
         step_start = time.time()
         
+        self.xL = self.data.site(self.site_idL).xpos
+        self.xR = self.data.site(self.site_idR).xpos
+        
         # Spatial velocity (aka twist).
         self.dxL = self.data.mocap_pos[self.mocap_idL] - self.data.site(self.site_idL).xpos
         self.twistL[:3] = self.Kpos * self.dxL / self.integration_dt
@@ -130,6 +133,10 @@ class Impedance:
         self.jac[:,:9] = self.jacL[:,:9];
         self.jac[:,9:18] = self.jacR[:,9:18];
 
+        self.M = np.zeros((self.model.nv,self.model.nv))
+        mujoco.mj_fullM(self.model,self.M,self.data.qM)
+        self.M = self.M[:18,:18]
+
         # Compute the task-space inertia matrix.
         mujoco.mj_solveM(self.model, self.data, self.M_all, np.eye(self.model.nv))
         self.M_inv=self.M_all[:18,:18];
@@ -139,22 +146,30 @@ class Impedance:
             self.Mx = np.linalg.inv(self.Mx_inv)
         else:
             self.Mx = np.linalg.pinv(self.Mx_inv, rcond=1e-2)
-        
-        
+
+        self.h = self.data.qfrc_bias[self.dof_ids[:18]]
+        self.mu = self.Mx @ self.jac @ self.M_inv @ self.h
+
+
         # Compute generalized forces.
         self.tau = np.zeros(18)
 
-        self.tau[:9] = self.jac[:,:9].T @ self.Mx @ (self.Kp * self.twistL - self.Kd * (self.jac[:,:9] @ self.data.qvel[self.dof_ids[:9]]))
-        self.tau[9:18] = self.jac[:,9:18].T @ self.Mx @ (self.Kp * self.twistR - self.Kd * (self.jac[:,9:18] @ self.data.qvel[self.dof_ids[9:18]]))
+        # self.tau[:9] = self.jac[:,:9].T @ self.Mx @ (self.Kp * self.twistL - self.Kd * (self.jac[:,:9] @ self.data.qvel[self.dof_ids[:9]]))
+        # self.tau[9:18] = self.jac[:,9:18].T @ self.Mx @ (self.Kp * self.twistR - self.Kd * (self.jac[:,9:18] @ self.data.qvel[self.dof_ids[9:18]]))
+
+        self.tau[:9] = self.jac[:,:9].T @  (self.Kd * np.concatenate((self.dxL ,self.error_quatL[:3])) + self.Kp * self.twistL +  self.mu)
+        self.tau[9:18] = self.jac[:,9:18].T @ (self.Kd * np.concatenate((self.dxR ,self.error_quatR[:3])) + self.Kp * self.twistR +  self.mu)
+
 
         self.Jbar = self.M_inv @ self.jac.T @ self.Mx
         
         self.ddq = self.Kp_null * (self.q0 - self.data.qpos[self.dof_ids[:18]]) - self.Kd_null * self.data.qvel[self.dof_ids[:18]]
-        self.tau += (np.eye(self.model.nv-6) - self.jac.T @ self.Jbar.T) @ self.ddq
+        self.tau1 = self.M @ self.ddq
+        self.tau += (np.eye(self.model.nv-6) - self.jac.T @ self.Jbar.T) @ self.tau1
 
         # Add gravity compensation.
-        if self.gravity_compensation:
-            self.tau += self.data.qfrc_bias[self.dof_ids[:18]]
+        # if self.gravity_compensation:
+        #     self.tau += self.data.qfrc_bias[self.dof_ids[:18]]
 
         # Set the control signal and step the simulation.
         self.data.ctrl[self.actuator_ids] = self.tau[self.actuator_ids]

@@ -29,8 +29,8 @@ viewer = mujoco.viewer.launch_passive(
         show_left_ui=False,
         show_right_ui=False)
 
-Ipos = np.asarray([100.0, 100.0, 100.0])  # [N/m]
-Iori = np.asarray([200.0, 200.0, 200.0])  # [Nm/rad]
+Ipos = np.asarray([30.0, 30.0, 30.0])  # [N/m]
+Iori = np.asarray([20.0, 20.0, 20.0])  # [Nm/rad]
 
 # Joint impedance control gains.
 Kp_null = np.asarray([70.0, 70.0, 35.0, 35.0, 12.5, 10.0, 2.0, 2.0, 2.0,
@@ -110,41 +110,41 @@ def main() -> None:
 
     while viewer.is_running():
         #set mocap pose to desired trajectory point for custom trajectory
-        if(erL<tolerance and erR < tolerance and i<=1500 and stage==1):
-            data.mocap_pos[controller.mocap_idL] = DtrajL[i][:3]
-            data.mocap_pos[controller.mocap_idR] = DtrajR[i][:3]
-            data.mocap_quat[controller.mocap_idL] = DtrajL[i][3:]
-            data.mocap_quat[controller.mocap_idR] = DtrajR[i][3:]
-            # contraint check -- to be implemented for dual arm 
-            # if true update to next traj point
-            # else set current as goal position and wait for controller to resolve error
-            i+=1
-            if(i==1500):
-                stage+=1
-                AtrajL = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idL],0.5);
-                AtrajR = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idR],0.5);
+        # if(erL<tolerance and erR < tolerance and i<=1500 and stage==1):
+        #     data.mocap_pos[controller.mocap_idL] = DtrajL[i][:3]
+        #     data.mocap_pos[controller.mocap_idR] = DtrajR[i][:3]
+        #     data.mocap_quat[controller.mocap_idL] = DtrajL[i][3:]
+        #     data.mocap_quat[controller.mocap_idR] = DtrajR[i][3:]
+        #     # contraint check -- to be implemented for dual arm 
+        #     # if true update to next traj point
+        #     # else set current as goal position and wait for controller to resolve error
+        #     i+=1
+        #     if(i==1500):
+        #         stage+=1
+        #         AtrajL = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idL],0.5);
+        #         AtrajR = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idR],0.5);
 
 
-        if(erL<tolerance and erR < tolerance and j<=1500 and stage==2):
-            data.mocap_pos[controller.mocap_idL] = AtrajL[j]
-            data.mocap_pos[controller.mocap_idR] = AtrajR[j]
-            j+=1
-            if(j==1500):
-                stage+=1
+        # if(erL<tolerance and erR < tolerance and j<=1500 and stage==2):
+        #     data.mocap_pos[controller.mocap_idL] = AtrajL[j]
+        #     data.mocap_pos[controller.mocap_idR] = AtrajR[j]
+        #     j+=1
+        #     if(j==1500):
+        #         stage+=1
 
         controller.armCrtl()
 
-        erL = np.linalg.norm(controller.dxL)
-        erR = np.linalg.norm(controller.dxR)
+        # erL = np.linalg.norm(controller.dxL)
+        # erR = np.linalg.norm(controller.dxR)
 
-        if(stage==1):
-            controller.gripperCtrl("open","both")
-        elif(stage==2):
-            controller.gripperCtrl("close","both")
-        elif(stage==3):
-            controller.gripperCtrl("open","both")
-            time.sleep(10)
-            viewer.close()
+        # if(stage==1):
+        #     controller.gripperCtrl("open","both")
+        # elif(stage==2):
+        #     controller.gripperCtrl("close","both")
+        # elif(stage==3):
+        #     controller.gripperCtrl("open","both")
+        #     time.sleep(10)
+        #     viewer.close()
 
         mujoco.mj_step(model,data)
         viewer.sync()
