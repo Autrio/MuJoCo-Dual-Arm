@@ -60,6 +60,7 @@ class Impedance:
         self.key_name = "home"
         self.key_id = self.model.key(self.key_name).id
         self.q0 = self.model.key(self.key_name).qpos[:18]
+        self.qd0 = self.data.qvel[:18]
 
         # Mocap body we will control with our mouse.
         self.mocap_nameL = "targetL"
@@ -72,7 +73,9 @@ class Impedance:
         self.jacR = np.zeros((6, self.model.nv))
         self.jacL = np.zeros((6, self.model.nv))
         self.jac = np.zeros((6, 18)) # the jacobian for the arms
+        self.jacPrev = np.zeros((6,18)) #prev values of jac for finite difference jdot
 
+    
         self.M_all = np.zeros((self.model.nv, self.model.nv))
 
         self.Mx = np.zeros((6, 6))
@@ -102,7 +105,7 @@ class Impedance:
         # Enable site frame visualization.
         self.viewer.opt.frame = mujoco.mjtFrame.mjFRAME_SITE
 
-    def armCrtl(self):
+    def armCrtl(self,JacP):
 
         step_start = time.time()
         
@@ -147,8 +150,12 @@ class Impedance:
         else:
             self.Mx = np.linalg.pinv(self.Mx_inv, rcond=1e-2)
 
+        self.jacPrev = JacP
+        
+        self.Jdot = (self.jac - self.jacPrev)/self.integration_dt
+
         self.h = self.data.qfrc_bias[self.dof_ids[:18]]
-        self.mu = self.Mx @ self.jac @ self.M_inv @ self.h
+        self.mu = self.Mx @ (self.jac @ self.M_inv @ self.h + self.Jdot @ self.data.qvel[:18])
 
 
         # Compute generalized forces.
@@ -157,14 +164,14 @@ class Impedance:
         # self.tau[:9] = self.jac[:,:9].T @ self.Mx @ (self.Kp * self.twistL - self.Kd * (self.jac[:,:9] @ self.data.qvel[self.dof_ids[:9]]))
         # self.tau[9:18] = self.jac[:,9:18].T @ self.Mx @ (self.Kp * self.twistR - self.Kd * (self.jac[:,9:18] @ self.data.qvel[self.dof_ids[9:18]]))
 
-        self.tau[:9] = self.jac[:,:9].T @  (self.Kd * np.concatenate((self.dxL ,self.error_quatL[:3])) + self.Kp * self.twistL +  self.mu)
+        self.tau[:9] = self.jac[:,:9].T @ (self.Kd * np.concatenate((self.dxL ,self.error_quatL[:3])) + self.Kp * self.twistL +  self.mu)
         self.tau[9:18] = self.jac[:,9:18].T @ (self.Kd * np.concatenate((self.dxR ,self.error_quatR[:3])) + self.Kp * self.twistR +  self.mu)
 
 
         self.Jbar = self.M_inv @ self.jac.T @ self.Mx
         
-        self.ddq = self.Kp_null * (self.q0 - self.data.qpos[self.dof_ids[:18]]) - self.Kd_null * self.data.qvel[self.dof_ids[:18]]
-        self.tau1 = self.M @ self.ddq
+        self.ddq = self.Kp_null * (self.q0 - self.data.qpos[self.dof_ids[:18]]) - self.Kd_null * (self.qd0 - self.data.qvel[self.dof_ids[:18]])
+        self.tau1 = self.M @ self.ddq + self.h
         self.tau += (np.eye(self.model.nv-6) - self.jac.T @ self.Jbar.T) @ self.tau1
 
         # Add gravity compensation.
