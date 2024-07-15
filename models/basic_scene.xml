@@ -1,0 +1,30 @@
+<mujocoinclude>
+    <asset>
+        <texture name="texplane" type="2d" builtin="checker" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2"
+                width="512" height="512"/>
+        <material name="MatGnd" reflectance="0.5" texture="texplane" texrepeat="1 1" texuniform="true"/>
+    </asset>
+
+    <worldbody>
+        <light directional="false" diffuse=".8 .8 .8" specular="0.3 0.3 0.3" pos="1  1 3" dir="-1 -1 -3"/>
+        <light directional="false" diffuse=".8 .8 .8" specular="0.3 0.3 0.3" pos="1 -1 3" dir="-1 1 -3"/>
+        <light directional="false" diffuse=".8 .8 .8" specular="0.3 0.3 0.3" pos="-1 0 3" dir="1 0 -3" />
+        <geom name="ground" pos="0 0 0" size="5 5 10" material="MatGnd" type="plane" contype="1" conaffinity="1"/>
+        <body name="targetL" pos="-0.15 0.33 0.5" quat="1 -1 0 1" mocap="true">
+        <!-- <body name="targetL" pos="−0.07199763998482589 0.001253687482995076 0.3002852891384753" quat="0.50841896 -0.46829798 -0.52980846 0.49143683" mocap="true"> -->
+            <geom type="box" size=".05 .05 .05" contype="0" conaffinity="0" rgba=".6 .3 .3 .5"/>
+            <site type="sphere" size="0.01" rgba="0 0 1 1" group="1"/>
+        </body>
+        <body name="targetR" pos="0.05 0.33 0.5" quat="0 1 0 0" mocap="true">
+        <!-- <body name="targetR" pos="`0.3693712451704328 0.009301520145709513 −0.06959037371058782" quat="-0.06307979 0.72912564 -0.67808265 -0.06782816" mocap="true"> -->
+            <geom type="box" size=".05 .05 .05" contype="0" conaffinity="0" rgba=".6 .3 .3 .5"/>
+            <site type="sphere" size="0.01" rgba="0 0 1 1" group="1"/>
+        </body>
+    </worldbody>
+    <keyframe>
+        <key name="home" qpos="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.15 0.3 0 0 0 0 0" ctrl="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/>
+    </keyframe>
+    <!-- <keyframe>
+        <key name="home" qpos="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0" ctrl="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/>
+    </keyframe> -->
+</mujocoinclude>
