@@ -37,7 +37,7 @@ Kp_null = np.asarray([70.0, 70.0, 35.0, 35.0, 12.5, 10.0, 2.0, 2.0, 2.0,
                       70.0, 70.0, 35.0, 35.0, 12.5, 10.0, 2.0, 2.0, 2.0])
 
 # Damping ratio for both Cartesian and joint impedance control.
-D = 1.2
+D = 1.3
 # Gains for the twist computation. These should be between 0 and 1. 0 means no
 # movement, 1 means move the end-effector to the target in one integration step.
 Kpos: float = 4.3
@@ -92,27 +92,33 @@ def main() -> None:
 
     stage = 1
 
-    DtrajL = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idL],0.268);
-    DtrajR = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idR],0.268);
+    # DtrajL = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idL],0.268);
+    # DtrajR = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idR],0.268);
 
-    # DtrajL = []
-    # DtrajR = []
+    DtrajL = []
+    DtrajR = []
 
-    # trajfile = open("/home/autrio/data/TRAJECTORY_LOG.TXT",'r');
-    # traj = trajfile.readlines();
-    # for t in traj:
-    #     t = t.split(" ")
-    #     t.pop()
-    #     DtrajL.append(t[:7])
-    #     DtrajR.append(t[7:])
+    trajfile = open("/home/autrio/data/TRAJECTORY_LOG.TXT",'r');
+    traj = trajfile.readlines();
+    for t in traj:
+        t = t.split(" ")
+        t.pop()
+        DtrajL.append(t[:7])
+        DtrajR.append(t[7:])
 
     jacP = controller.jac
     while viewer.is_running():
 
         # set mocap pose to desired trajectory point for custom trajectory
-        if(erL<tolerance and erR < tolerance and i<=1500 and stage==1):
-            data.mocap_pos[controller.mocap_idL] = DtrajL[i]
-            data.mocap_pos[controller.mocap_idR] = DtrajR[i]
+        if(erL<tolerance and erR < tolerance and i<len(traj) and stage==1):
+            # data.mocap_pos[controller.mocap_idL] = DtrajL[i]
+            # data.mocap_pos[controller.mocap_idR] = DtrajR[i]
+            data.mocap_pos[controller.mocap_idL] = DtrajL[i][:3]
+            data.mocap_pos[controller.mocap_idR] = DtrajR[i][:3]
+            data.mocap_quat[controller.mocap_idL][:1] = DtrajL[i][6]
+            data.mocap_quat[controller.mocap_idL][1:] = DtrajL[i][3:6]
+            data.mocap_quat[controller.mocap_idR][:1] = DtrajR[i][6]
+            data.mocap_quat[controller.mocap_idR][1:] = DtrajR[i][3:6]
             # contraint check -- to be implemented for dual arm 
             # if true update to next traj point
             # else set current as goal position and wait for controller to resolve error
@@ -131,6 +137,7 @@ def main() -> None:
                 stage+=1
 
         controller.armCrtl(jacP)
+        # model.opt.gravity = 0.00
 
         erL = np.linalg.norm(controller.dxL)
         erR = np.linalg.norm(controller.dxR)
