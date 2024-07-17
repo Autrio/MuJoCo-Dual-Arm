@@ -29,7 +29,7 @@ viewer = mujoco.viewer.launch_passive(
         show_left_ui=False,
         show_right_ui=False)
 
-Ipos = np.asarray([100.0, 100.0, 100.0])  # [N/m]
+Ipos = np.asarray([500.0, 500.0, 500.0])  # [N/m]
 Iori = np.asarray([50.0, 50.0, 50.0])  # [Nm/rad]
 
 # Joint impedance control gains.
@@ -40,12 +40,12 @@ Kp_null = np.asarray([70.0, 70.0, 35.0, 35.0, 12.5, 10.0, 2.0, 2.0, 2.0,
 D = 1.3
 # Gains for the twist computation. These should be between 0 and 1. 0 means no
 # movement, 1 means move the end-effector to the target in one integration step.
-Kpos: float = 4.3
+Kpos: float = 4
 
 # Gain for the orientation component of the twist computation. This should be
 # between 0 and 1. 0 means no movement, 1 means move the end-effector to the target
 # orientation in one integration step.
-Kori: float = 3.3
+Kori: float = 4
 
 # Integration timestep in seconds.
 integration_dt: float = 0.1
@@ -83,7 +83,7 @@ def main() -> None:
     
     controller.resetViewer()
 
-    tolerance = 0.07
+    tolerance = 0.02
     erL = 1000
     erR = 1000
 
@@ -114,7 +114,9 @@ def main() -> None:
             # data.mocap_pos[controller.mocap_idL] = DtrajL[i]
             # data.mocap_pos[controller.mocap_idR] = DtrajR[i]
             data.mocap_pos[controller.mocap_idL] = DtrajL[i][:3]
+            data.mocap_pos[controller.mocap_idL][2]-=0.1
             data.mocap_pos[controller.mocap_idR] = DtrajR[i][:3]
+            data.mocap_pos[controller.mocap_idR][2]-=0.1
             data.mocap_quat[controller.mocap_idL][:1] = DtrajL[i][6]
             data.mocap_quat[controller.mocap_idL][1:] = DtrajL[i][3:6]
             data.mocap_quat[controller.mocap_idR][:1] = DtrajR[i][6]
@@ -123,7 +125,7 @@ def main() -> None:
             # if true update to next traj point
             # else set current as goal position and wait for controller to resolve error
             i+=1
-            if(i==1500):
+            if(i==len(traj)):
                 stage+=1
                 AtrajL = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idL],0.5);
                 AtrajR = LineartrajectoryZ(1500,data.mocap_pos[controller.mocap_idR],0.5);
@@ -146,6 +148,10 @@ def main() -> None:
             controller.gripperCtrl("open","both")
         elif(stage==2):
             controller.gripperCtrl("close","both")
+        elif(stage==3):
+            controller.gripperCtrl("close","both")
+            time.sleep(5)
+            viewer.close
 
 
         mujoco.mj_step(model,data)
