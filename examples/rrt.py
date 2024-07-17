@@ -256,8 +256,12 @@ class RRT:
         dy = to_node.y - from_node.y
         dz = to_node.z - from_node.z
         d = math.sqrt(dx**2 + dy**2 + dz**2)
+        
+        if d == 0:
+            return d, 0, 0  # If distance is zero, return 0 for both angles to avoid division by zero
+        
         theta = math.atan2(dy, dx)
-        phi = math.acos(dz / d)
+        phi = math.acos(dz / d) if d != 0 else 0
         return d, theta, phi
 
 
