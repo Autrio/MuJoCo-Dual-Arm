@@ -209,9 +209,9 @@ integration_dt = 0.1
 gravity_compensation = True
 dt = 0.002
 
-def create_rrt_trajectory(init_pose, final_pose, steps, obstacle_list):
-    traj = generate_smooth_rrt(init_pose, final_pose, steps, obstacle_list)
-    return traj
+def create_rrt_trajectory(start, goal, steps, obstacle_list):
+    path = generate_smooth_rrt(start, goal, steps, obstacle_list)
+    return path
 
 def main():
     assert mujoco.__version__ >= "3.1.0", "Please upgrade to mujoco 3.1.0 or later."
