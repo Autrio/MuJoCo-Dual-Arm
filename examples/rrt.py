@@ -90,19 +90,17 @@ class RRT:
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
 
             if self.check_if_outside_play_area(new_node, self.play_area) and \
-               self.check_collision(
-                   new_node, self.obstacle_list, self.robot_radius):
+               self.check_collision(self, new_node, self.obstacle_list, self.robot_radius):
                 self.node_list.append(new_node)
 
             if animation and i % 5 == 0:
                 self.draw_graph(rnd_node)
 
             if self.calc_dist_to_goal(self.node_list[-1].x,
-                                      self.node_list[-1].y) <= self.expand_dis:
+                                      self.node_list[-1].y,self.node_list[-1].z) <= self.expand_dis:
                 final_node = self.steer(self.node_list[-1], self.end,
                                         self.expand_dis)
-                if self.check_collision(
-                        final_node, self.obstacle_list, self.robot_radius):
+                if self.check_collision(self,final_node, self.obstacle_list, self.robot_radius):
                     return self.generate_final_course(len(self.node_list) - 1)
 
             if animation and i % 5:
@@ -156,10 +154,11 @@ class RRT:
         return path
 
 
-    def calc_dist_to_goal(self, x, y):
+    def calc_dist_to_goal(self, x, y,z):
         dx = x - self.end.x
         dy = y - self.end.y
-        return math.hypot(dx, dy)
+        dz = z - self.end.z
+        return math.hypot(dx, dy, dz)
 
     def get_random_node(self):
         if random.randint(0, 100) > self.goal_sample_rate:
@@ -172,39 +171,34 @@ class RRT:
         return rnd
 
 
-
+    @staticmethod
     def draw_graph(self, rnd=None):
         plt.clf()
-        # for stopping simulation with the esc key.
-        plt.gcf().canvas.mpl_connect(
-            'key_release_event',
-            lambda event: [exit(0) if event.key == 'escape' else None])
         if rnd is not None:
-            plt.plot(rnd.x, rnd.y, "^k")
-            if self.robot_radius > 0.0:
-                self.plot_circle(rnd.x, rnd.y, self.robot_radius, '-r')
+            plt.plot(rnd.x, rnd.y, rnd.z, "^k")
         for node in self.node_list:
             if node.parent:
-                plt.plot(node.path_x, node.path_y, "-g")
+                plt.plot(node.path_x, node.path_y, node.path_z, "-g")
 
-        for (ox, oy, size) in self.obstacle_list:
-            self.plot_circle(ox, oy, size)
+        for (ox, oy, oz, size) in self.obstacle_list:
+            plot_sphere(ox, oy, oz, size)
 
-        if self.play_area is not None:
-            plt.plot([self.play_area.xmin, self.play_area.xmax,
-                      self.play_area.xmax, self.play_area.xmin,
-                      self.play_area.xmin],
-                     [self.play_area.ymin, self.play_area.ymin,
-                      self.play_area.ymax, self.play_area.ymax,
-                      self.play_area.ymin],
-                     "-k")
-
-        plt.plot(self.start.x, self.start.y, "xr")
-        plt.plot(self.end.x, self.end.y, "xr")
-        plt.axis("equal")
-        plt.axis([self.min_rand, self.max_rand, self.min_rand, self.max_rand])
+        plt.plot(self.start.x, self.start.y, self.start.z, "xr")
+        plt.plot(self.end.x, self.end.y, self.end.z, "xr")
+        plt.axis([-2, 15, -2, 15, -2, 15])
         plt.grid(True)
         plt.pause(0.01)
+
+
+    @staticmethod
+    def plot_sphere(x, y, z, radius):
+        u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+        xs = x + radius * np.cos(u) * np.sin(v)
+        ys = y + radius * np.sin(u) * np.sin(v)
+        zs = z + radius * np.cos(v)
+        ax = plt.figure().add_subplot(111, projection='3d')
+        ax.plot_wireframe(xs, ys, zs, color="r")
+
 
     @staticmethod
     def plot_circle(x, y, size, color="-b"):  # pragma: no cover
@@ -235,20 +229,16 @@ class RRT:
             return True  # inside - ok
 
     @staticmethod
-    def check_collision(node, obstacleList, robot_radius):
-
-        if node is None:
-            return False
-
-        for (ox, oy, size) in obstacleList:
-            dx_list = [ox - x for x in node.path_x]
-            dy_list = [oy - y for y in node.path_y]
-            d_list = [dx * dx + dy * dy for (dx, dy) in zip(dx_list, dy_list)]
-
-            if min(d_list) <= (size+robot_radius)**2:
+    def check_collision(self, node, obstacle_list, robot_radius):
+        for (ox, oy, oz, size) in obstacle_list:
+            dx = ox - node.x
+            dy = oy - node.y
+            dz = oz - node.z
+            d = math.sqrt(dx**2 + dy**2 + dz**2)
+            if d <= size + robot_radius:
                 return False  # collision
-
         return True  # safe
+
 
     @staticmethod
     def calc_distance_and_angle(self, from_node, to_node):

@@ -235,15 +235,15 @@ def main():
     stage = 1
 
     obstacle_list = [
-        (5, 5, 1),
-        (3, 6, 2),
-        (3, 8, 2),
-        (3, 10, 2),
-        (7, 5, 2),
-        (9, 5, 2)
+        (0, 0, 0,0.43)
+        # (-0.2, 0.2, 0.2),
+        # (0.2, -0.2, 0.2),
+        # (-0.2, -0.2, 0.2),
+        # (0.2, -0.2, -0.2),
+        # (-0.2, -0.2, -0.2)
     ]
 
-    DtrajL = create_rrt_trajectory(data.mocap_pos[controller.mocap_idL], [-0.25, 0.33, 0.15], 1500, obstacle_list)
+    DtrajL = create_rrt_trajectory(data.mocap_pos[controller.mocap_idL], [-0.15, 0.33, 0.2], 1500, obstacle_list)
     DtrajR = create_rrt_trajectory(data.mocap_pos[controller.mocap_idR], [0.05, 0.33, 0.268], 1500, obstacle_list)
 
     time_steps = []

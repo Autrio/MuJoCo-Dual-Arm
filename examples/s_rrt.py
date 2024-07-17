@@ -250,3 +250,12 @@ class SmoothRRT:
 def generate_smooth_rrt(start, goal, steps, obstacle_list):
     rrt = SmoothRRT(start, goal, steps, obstacle_list)
     return rrt.generate_path()
+# def generate_smooth_rrt(start, goal, steps, obstacle_list):
+#     # Adjust parameters as needed
+#     rrt = RRT(start=start, goal=goal, rand_area=[-2, 15], obstacle_list=obstacle_list, max_iter=1000)
+#     path = rrt.planning(animation=True)
+#     if path is None:
+#         raise ValueError("Could not find a path with RRT. Try adjusting parameters or verifying the obstacle list.")
+#     smoothed_path = path_smoothing(path, max_iter=steps, obstacle_list=obstacle_list)
+#     return smoothed_path
+
