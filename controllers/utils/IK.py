@@ -11,6 +11,7 @@ class GradientDescentIK:
         self.alpha = alpha
         self.jacp = jacp
         self.jacr = jacr
+        self.site_quat = np.zeros(4)
 
     def checkJointLimits(self,q):
         """ check if joints are within defined joint limits"""
@@ -18,36 +19,43 @@ class GradientDescentIK:
             q[i] = max(self.model.jnt_range[i][0], 
                        min(q[i], self.model.jnt_range[i][1]))
             
-    def solve(self,goal,init_qpos,body_id):
+    def solve(self,goal,init_qpos,site_id):
         """solve for desired joint angles for goal"""
-        self.data.qpos = init_qpos;
+        self.data.qpos = init_qpos[:18];
         mujoco.mj_forward(self.model,self.data)
-        curr_pose = self.data.body(body_id).xpos
+        mujoco.mju_mat2Quat(self.site_quat, self.data.site(self.site_id).xmat)
+        curr_pos = self.data.site(site_id).xpos
+        curr_pose = np.concatenate(curr_pos,self.site_quat[:3])
         error = np.subtract(goal,curr_pose)
 
         while(np.linalg.norm(error)>=self.tol):
-            mujoco.mj_jac(self.model, self.data, self.jacp, self.jacr, goal, body_id)
+            mujoco.mj_jacSite(self.model, self.data, self.jacp, self.jacr, goal, site_id)
             grad = self.alpha * self.jacp.T @ error
             self.data.qpos += self.step_size * grad
             self.checkJointLimits(self.data.qpos)
             mujoco.mj_forward(self.model, self.data)
-            error = np.subtract(goal, self.data.body(body_id).xpos)
+            mujoco.mju_mat2Quat(self.site_quat, self.data.site(self.site_id).xmat)
+            curr_pos = self.data.site(site_id).xpos
+            curr_pose = np.concatenate(curr_pos,self.site_quat[:3])
+            error = np.subtract(goal,curr_pose)
+
 
 
 class GaussNewtonIK:
     
-    def __init__(self, model, data, step_size, tol, alpha, jacp, jacr, viewer):
+    def __init__(self, model, data, step_size, tol, alpha, jac1, jac2, viewer):
         self.model = model
         self.data = data
         self.step_size = step_size
         self.tol = tol
         self.alpha = alpha
-        self.jacp1 = jacp
-        self.jacp2 = jacp.copy()
-        self.jacr1 = jacr
-        self.jacr2 = jacr.copy()
+        self.jac1 = jac1
+        self.jac2 = jac2
         self.trajectory = []
         self.viewer = viewer
+        self.site_quat1 = np.zeros(4)
+        self.site_quat2 = np.zeros(4)
+
     
     def checkJointLimits(self, q):
         """Check if the joints are within their limits"""
@@ -55,51 +63,62 @@ class GaussNewtonIK:
             q[i] = max(self.model.jnt_range[i][0], 
                        min(q[i], self.model.jnt_range[i][1]))
     
-    def solve(self, goal1, goal2, init_qpos, body_id1, body_id2):
-        self.data.qpos[:] = init_qpos
+    def solve(self, goal1, goal2, init_qpos, site_id1, site_id2):
+        self.data.qpos[:18] = init_qpos
         mujoco.mj_forward(self.model, self.data)
-        current_pose1 = self.data.body(body_id1).xpos
-        error1 = np.subtract(goal1, current_pose1)
-        current_pose2 = self.data.body(body_id2).xpos
-        error2 = np.subtract(goal2, current_pose2)
+        mujoco.mju_mat2Quat(self.site_quat1, self.data.site(site_id1).xmat)
+        curr_pos1 = self.data.site(site_id1).xpos
+        curr_pose1 = np.concatenate((curr_pos1,self.site_quat1[:3]))
+        error1 = np.subtract(goal1,curr_pose1)
+        mujoco.mju_mat2Quat(self.site_quat2, self.data.site(site_id2).xmat)
+        curr_pos2 = self.data.site(site_id2).xpos
+        curr_pose2 = np.concatenate((curr_pos2,self.site_quat2[:3]))
+        error2 = np.subtract(goal2,curr_pose2)
         
         while self.viewer.is_running():
             # Compute Jacobians for both arms
-            mujoco.mj_jac(self.model, self.data, self.jacp1, self.jacr1, goal1, body_id1)
-            mujoco.mj_jac(self.model, self.data, self.jacp2, self.jacr2, goal2, body_id2)
+            mujoco.mj_jacSite(self.model, self.data, self.jac1[:3], self.jac1[3:], site_id1)
+            mujoco.mj_jacSite(self.model, self.data, self.jac2[:3], self.jac2[3:], site_id2)
             
             # Compute product of Jacobians
-            product1 = self.jacp1.T @ self.jacp1
-            product2 = self.jacp2.T @ self.jacp2
+            product1 = self.jac1.T @ self.jac1
+            product2 = self.jac2.T @ self.jac2
             
             # Compute Jacobian pseudoinverses
             if np.isclose(np.linalg.det(product1), 0):
-                j_inv1 = np.linalg.pinv(self.jacp1)
+                j_inv1 = np.linalg.pinv(self.jac1)
             else:
-                j_inv1 = np.linalg.inv(product1) @ self.jacp1.T
+                j_inv1 = np.linalg.inv(product1) @ self.jac1.T
             
             if np.isclose(np.linalg.det(product2), 0):
-                j_inv2 = np.linalg.pinv(self.jacp2)
+                j_inv2 = np.linalg.pinv(self.jac2)
             else:
-                j_inv2 = np.linalg.inv(product2) @ self.jacp2.T
+                j_inv2 = np.linalg.inv(product2) @ self.jac2.T
             
             # Compute changes in joint positions
+
             delta_q1 = j_inv1 @ error1
             delta_q2 = j_inv2 @ error2
 
             # Update joint positions for both arms
-            self.data.qpos[9:15] += self.step_size * delta_q1[9:15]
-            self.data.qpos[0:6] += self.step_size * delta_q2[0:6]
+            self.data.qpos[0:9] += self.step_size * delta_q1[0:9]
+            self.data.qpos[9:18] += self.step_size * delta_q2[9:18]
 
             # Forward the simulation
             mujoco.mj_forward(self.model, self.data)
             
             # Check joint limits
-            self.checkJointLimits(self.data.qpos)
+            self.checkJointLimits(self.data.qpos[:18])
 
             # Update errors
-            error1 = np.subtract(goal1, self.data.body(body_id1).xpos)
-            error2 = np.subtract(goal2, self.data.body(body_id2).xpos)
+            mujoco.mju_mat2Quat(self.site_quat1, self.data.site(site_id1).xmat)
+            curr_pos1 = self.data.site(site_id1).xpos
+            curr_pose1 = np.concatenate((curr_pos1,self.site_quat1[:3]))
+            error1 = np.subtract(goal1,curr_pose1)
+            mujoco.mju_mat2Quat(self.site_quat2, self.data.site(site_id2).xmat)
+            curr_pos2 = self.data.site(site_id2).xpos
+            curr_pose2 = np.concatenate((curr_pos2,self.site_quat2[:3]))
+            error2 = np.subtract(goal2,curr_pose2)
             
             # Store the trajectory
             self.trajectory.append(self.data.qpos.copy())
