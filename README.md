@@ -1,7 +1,7 @@
 # MuJoCo-Dual-Arm
 Franka Panda Bi-Manual Manipulation simulated on MuJoCo
 
-# Large Object manipulation
+## Large Object manipulation
 [Grasp_5_4.webm](https://github.com/user-attachments/assets/31ce04cf-ceda-4e61-a00c-c0bf74e08b00)
 
 
