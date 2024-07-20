@@ -107,6 +107,9 @@ def main() -> None:
         DtrajR.append(t[7:])
 
     jacP = controller.jac
+
+    tlog = open("/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/examples/JointPosLog.txt","r")
+
     while viewer.is_running():
 
         # set mocap pose to desired trajectory point for custom trajectory
@@ -158,6 +161,8 @@ def main() -> None:
 
         jacP = controller.jac
 
+        # print(data.qpos[:18])
+        
         viewer.sync()
 
 if __name__ == "__main__":

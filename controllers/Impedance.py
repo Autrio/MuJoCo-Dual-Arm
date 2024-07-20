@@ -1,6 +1,7 @@
 import mujoco
 import numpy as np
 import time
+from scipy.spatial.transform import Rotation as R
 
 class Impedance:
     def __init__(self,model,data,viewer) -> None:
@@ -129,6 +130,18 @@ class Impedance:
         mujoco.mju_quat2Vel(self.twistR[3:], self.error_quatR, 1.0)
         self.twistR[3:] *= self.Kori / self.integration_dt
 
+
+        # implement as a function later
+        tempQuatL = self.error_quatL[1:]
+        tempQuatL = np.append(tempQuatL,self.error_quatL[0])
+        rotnErrL = R.from_quat(tempQuatL)
+        roL = rotnErrL.as_euler("xyz",degrees=False)
+
+        tempQuatR = self.error_quatR[1:]
+        tempQuatR = np.append(tempQuatR,self.error_quatR[0])
+        rotnErrR = R.from_quat(tempQuatR)
+        roR = rotnErrL.as_euler("xyz",degrees=False)
+
         # Jacobian.
         mujoco.mj_jacSite(self.model, self.data, self.jacL[:3], self.jacL[3:], self.site_idL)    
         mujoco.mj_jacSite(self.model, self.data, self.jacR[:3], self.jacR[3:], self.site_idR)
@@ -164,8 +177,8 @@ class Impedance:
         # self.tau[:9] = self.jac[:,:9].T @ self.Mx @ (self.Kp * self.twistL - self.Kd * (self.jac[:,:9] @ self.data.qvel[self.dof_ids[:9]]))
         # self.tau[9:18] = self.jac[:,9:18].T @ self.Mx @ (self.Kp * self.twistR - self.Kd * (self.jac[:,9:18] @ self.data.qvel[self.dof_ids[9:18]]))
 
-        self.tau[:9] = self.jac[:,:9].T @ (self.Kd * np.concatenate((self.dxL ,self.error_quatL[:3])) + self.Kp * self.twistL +  self.mu)
-        self.tau[9:18] = self.jac[:,9:18].T @ (self.Kd * np.concatenate((self.dxR ,self.error_quatR[:3])) + self.Kp * self.twistR +  self.mu)
+        self.tau[:9] = self.jac[:,:9].T @ (self.Kd * np.concatenate((self.dxL ,roL)) + self.Kp * self.twistL +  self.mu)
+        self.tau[9:18] = self.jac[:,9:18].T @ (self.Kd * np.concatenate((self.dxR ,roR)) + self.Kp * self.twistR +  self.mu)
 
 
         self.Jbar = self.M_inv @ self.jac.T @ self.Mx
