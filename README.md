@@ -1,8 +1,11 @@
 # MuJoCo-Dual-Arm
 Franka Panda Bi-Manual Manipulation simulated on MuJoCo
 
+# Large Object manipulation
+![](https://iiitaphyd-my.sharepoint.com/:v:/g/personal/shreya_bollimuntha_research_iiit_ac_in/EYCsqP9mfqpIutmS7X0Ie5cBoE-HAFIGtabWeRs6UWBv3w?referrer=Outlook.Web&referrerScenario=email-linkwithembed)
+
 ## Visualising The Model
-In the repository directory directory,
+In the repository directory ,
 ```console
 python3 -m mujoco.viewer --mjcf=/full/path/to/model/file.xml
 ```
