@@ -4,6 +4,10 @@
     <include file="panda/assets/assets.xml" />
     <include file="panda/assets/gripper_assets.xml" />
     <compiler meshdir="" />
+    <option noslip_iterations="20"> </option>
+    <!-- <option condim="6"> </option> -->
+    <option cone="elliptic"> </option>
+    <option><flag multiccd="enable"/> </option>
 
     <default>
         <default class='torso'>
@@ -18,11 +22,11 @@
             <geom name='absR' type='capsule' size='.06' fromto='-.15 0 .9 -.05 0 .35' />
             <geom name='legs' type='capsule' size='.115' fromto='0 0 .35 0 0 0.05' /> -->
 
-            <body name='leftarm' pos='0 -0.5 0' euler='0 0 0'>
+            <body name='leftarm' pos='-0.6 0 0' euler='0 0 1.57'>
                 <include file="panda/assets/chainL.xml" />
             </body>
 
-            <body name='rightarm' pos='0 0.5 0' euler='0 0 0'>
+            <body name='rightarm' pos='0.6 0 0' euler='0 0 1.57'>
                 <include file="panda/assets/chainR.xml" />
             </body>
 

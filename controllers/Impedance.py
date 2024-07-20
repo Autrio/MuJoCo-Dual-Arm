@@ -1,6 +1,7 @@
 import mujoco
 import numpy as np
 import time
+from scipy.spatial.transform import Rotation as R
 
 class Impedance:
     def __init__(self,model,data,viewer) -> None:
@@ -60,6 +61,7 @@ class Impedance:
         self.key_name = "home"
         self.key_id = self.model.key(self.key_name).id
         self.q0 = self.model.key(self.key_name).qpos[:18]
+        self.qd0 = self.data.qvel[:18]
 
         # Mocap body we will control with our mouse.
         self.mocap_nameL = "targetL"
@@ -72,7 +74,9 @@ class Impedance:
         self.jacR = np.zeros((6, self.model.nv))
         self.jacL = np.zeros((6, self.model.nv))
         self.jac = np.zeros((6, 18)) # the jacobian for the arms
+        self.jacPrev = np.zeros((6,18)) #prev values of jac for finite difference jdot
 
+    
         self.M_all = np.zeros((self.model.nv, self.model.nv))
 
         self.Mx = np.zeros((6, 6))
@@ -95,6 +99,7 @@ class Impedance:
     def resetViewer(self):
         # Reset the simulation.
         mujoco.mj_resetDataKeyframe(self.model, self.data, self.key_id)
+        mujoco.mj_forward(self.model, self.data)
 
         # Reset the free camera.
         mujoco.mjv_defaultFreeCamera(self.model, self.viewer.cam)
@@ -102,9 +107,12 @@ class Impedance:
         # Enable site frame visualization.
         self.viewer.opt.frame = mujoco.mjtFrame.mjFRAME_SITE
 
-    def armCrtl(self):
+    def armCtrl(self,JacP):
 
         step_start = time.time()
+        
+        self.xL = self.data.site(self.site_idL).xpos
+        self.xR = self.data.site(self.site_idR).xpos
         
         # Spatial velocity (aka twist).
         self.dxL = self.data.mocap_pos[self.mocap_idL] - self.data.site(self.site_idL).xpos
@@ -123,12 +131,28 @@ class Impedance:
         mujoco.mju_quat2Vel(self.twistR[3:], self.error_quatR, 1.0)
         self.twistR[3:] *= self.Kori / self.integration_dt
 
+
+        # implement as a function later
+        tempQuatL = self.error_quatL[1:]
+        tempQuatL = np.append(tempQuatL,self.error_quatL[0])
+        rotnErrL = R.from_quat(tempQuatL)
+        roL = rotnErrL.as_euler("xyz",degrees=False)
+
+        tempQuatR = self.error_quatR[1:]
+        tempQuatR = np.append(tempQuatR,self.error_quatR[0])
+        rotnErrR = R.from_quat(tempQuatR)
+        roR = rotnErrL.as_euler("xyz",degrees=False)
+
         # Jacobian.
         mujoco.mj_jacSite(self.model, self.data, self.jacL[:3], self.jacL[3:], self.site_idL)    
         mujoco.mj_jacSite(self.model, self.data, self.jacR[:3], self.jacR[3:], self.site_idR)
 
         self.jac[:,:9] = self.jacL[:,:9];
         self.jac[:,9:18] = self.jacR[:,9:18];
+
+        self.M = np.zeros((self.model.nv,self.model.nv))
+        mujoco.mj_fullM(self.model,self.M,self.data.qM)
+        self.M = self.M[:18,:18]
 
         # Compute the task-space inertia matrix.
         mujoco.mj_solveM(self.model, self.data, self.M_all, np.eye(self.model.nv))
@@ -139,22 +163,37 @@ class Impedance:
             self.Mx = np.linalg.inv(self.Mx_inv)
         else:
             self.Mx = np.linalg.pinv(self.Mx_inv, rcond=1e-2)
+
+        self.joint_errorL = self.q0[:9] - self.data.qpos[self.dof_idsL]
+        self.joint_errorR = self.q0[9:18] - self.data.qpos[self.dof_idsR]
+
+        self.jacPrev = JacP
         
-        
+        self.Jdot = (self.jac - self.jacPrev)/self.integration_dt
+
+        self.h = self.data.qfrc_bias[self.dof_ids[:18]]
+        self.mu = self.Mx @ (self.jac @ self.M_inv @ self.h + self.Jdot @ self.data.qvel[:18])
+
+
         # Compute generalized forces.
         self.tau = np.zeros(18)
 
-        self.tau[:9] = self.jac[:,:9].T @ self.Mx @ (self.Kp * self.twistL - self.Kd * (self.jac[:,:9] @ self.data.qvel[self.dof_ids[:9]]))
-        self.tau[9:18] = self.jac[:,9:18].T @ self.Mx @ (self.Kp * self.twistR - self.Kd * (self.jac[:,9:18] @ self.data.qvel[self.dof_ids[9:18]]))
+        # self.tau[:9] = self.jac[:,:9].T @ self.Mx @ (self.Kp * self.twistL - self.Kd * (self.jac[:,:9] @ self.data.qvel[self.dof_ids[:9]]))
+        # self.tau[9:18] = self.jac[:,9:18].T @ self.Mx @ (self.Kp * self.twistR - self.Kd * (self.jac[:,9:18] @ self.data.qvel[self.dof_ids[9:18]]))
+
+        self.tau[:9] = self.jac[:,:9].T @ (self.Kd * np.concatenate((self.dxL ,roL)) + self.Kp * self.twistL +  self.mu)
+        self.tau[9:18] = self.jac[:,9:18].T @ (self.Kd * np.concatenate((self.dxR ,roR)) + self.Kp * self.twistR +  self.mu)
+
 
         self.Jbar = self.M_inv @ self.jac.T @ self.Mx
         
-        self.ddq = self.Kp_null * (self.q0 - self.data.qpos[self.dof_ids[:18]]) - self.Kd_null * self.data.qvel[self.dof_ids[:18]]
-        self.tau += (np.eye(self.model.nv-6) - self.jac.T @ self.Jbar.T) @ self.ddq
+        self.ddq = self.Kp_null * (self.q0 - self.data.qpos[self.dof_ids[:18]]) - self.Kd_null * (self.qd0 - self.data.qvel[self.dof_ids[:18]])
+        self.tau1 = self.M @ self.ddq + self.h
+        self.tau += (np.eye(self.model.nv-6) - self.jac.T @ self.Jbar.T) @ self.tau1
 
         # Add gravity compensation.
-        if self.gravity_compensation:
-            self.tau += self.data.qfrc_bias[self.dof_ids[:18]]
+        # if self.gravity_compensation:
+        #     self.tau += self.data.qfrc_bias[self.dof_ids[:18]]
 
         # Set the control signal and step the simulation.
         self.data.ctrl[self.actuator_ids] = self.tau[self.actuator_ids]
