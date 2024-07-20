@@ -2,6 +2,8 @@ import mujoco
 import numpy as np
 import time
 from scipy.spatial.transform import Rotation as R
+import matplotlib.pyplot as plt
+
 
 class Impedance:
     def __init__(self,model,data,viewer) -> None:
@@ -94,6 +96,18 @@ class Impedance:
 
         self.error_quatL = np.zeros(4)
         self.error_quatR = np.zeros(4)
+
+        #arrays for plotting
+        self.time_steps = []
+        self.erL_list = []
+        self.erR_list = []
+        self.posL_list = []
+        self.posR_list = []
+        self.erL_joint = []
+        self.erR_joint = []
+        self.forceL_list = []
+        self.forceR_list = []
+        self.SD = []
 
 
     def resetViewer(self):
@@ -202,6 +216,20 @@ class Impedance:
         if time_until_next_step > 0:
             time.sleep(time_until_next_step)
 
+        # Collect data for plotting
+        self.erL = np.linalg.norm(self.dxL)
+        self.erR = np.linalg.norm(self.dxR)
+        self.time_steps.append(len(self.time_steps) * self.dt)
+        self.erL_list.append(self.erL)
+        self.erR_list.append(self.erR)
+        self.posL_list.append(self.data.mocap_pos[self.mocap_idL].copy())
+        self.posR_list.append(self.data.mocap_pos[self.mocap_idR].copy())
+        self.erL_joint.append(np.linalg.norm(self.joint_errorL))  # Example of joint angle error collection
+        self.erR_joint.append(np.linalg.norm(self.joint_errorR))  # Example of joint angle error collection
+        self.forceL_list.append(np.linalg.norm(self.tau[8]))  # Example of force collection
+        self.forceR_list.append(np.linalg.norm(self.tau[17]))  # Example of force collection
+
+        #return the actuator torques for monitoring
         return self.tau[self.actuator_ids]
     
     def gripperCtrl(self,state,eef):
@@ -222,3 +250,131 @@ class Impedance:
                 self.data.ctrl[16:18]=0.04; #open R gripper
             elif(state=="close"):
                 self.data.ctrl[16:18]=0.0; #close R gripper
+
+
+    def makeplots(self):
+            # Convert lists to numpy arrays for easier manipulation
+        self.time_steps = np.array(self.time_steps)
+        self.erL_list = np.array(self.erL_list)
+        self.erR_list = np.array(self.erR_list)
+        self.posL_list = np.array(self.posL_list)
+        self.posR_list = np.array(self.posR_list)
+        self.erL_joint = np.array(self.erL_joint)
+        self.erR_joint = np.array(self.erR_joint)
+        self.forceL_list = np.array(self.forceL_list)
+        self.forceR_list = np.array(self.forceR_list)
+
+        # Plot position errors in Cartesian space for both arms
+        plt.figure(figsize=(12, 6))
+
+        plt.subplot(3, 2, 1)
+        plt.plot(self.time_steps, self.erL_list, label='Left Arm Position Error')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Position Error (m)')
+        plt.title('Left Arm Position Error in Cartesian Space')
+        plt.legend()
+
+        plt.subplot(3, 2, 2)
+        plt.plot(self.time_steps, self.erR_list, label='Right Arm Position Error')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Position Error (m)')
+        plt.title('Right Arm Position Error in Cartesian Space')
+        plt.legend()
+
+        # Plot joint angle errors for both arms
+        plt.subplot(3, 2, 3)
+        plt.plot(self.time_steps, self.erL_joint, label='Left Arm Joint Angle Error')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Joint Angle Error (rad)')
+        plt.title('Left Arm Joint Angle Error')
+        plt.legend()
+
+        plt.subplot(3, 2, 4)
+        plt.plot(self.time_steps, self.erR_joint, label='Right Arm Joint Angle Error')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Joint Angle Error (rad)')
+        plt.title('Right Arm Joint Angle Error')
+        plt.legend()
+
+        # plt.tight_layout()
+        # plt.show()
+
+        # # Plot force of the end effector for each timestep
+        # plt.figure(figsize=(12, 6))
+
+        plt.subplot(3, 2, 5)
+        plt.plot(self.time_steps, self.forceL_list, label='Left Arm End Effector Force')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Force (N)')
+        plt.title('Left Arm End Effector Force')
+        plt.legend()
+
+        plt.subplot(3, 2, 6)
+        plt.plot(self.time_steps, self.forceR_list, label='Right Arm End Effector Force')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Force (N)')
+        plt.title('Right Arm End Effector Force')
+        plt.legend()
+
+        plt.tight_layout()
+        plt.show()
+
+        #sensor data ---------------------------------------------------------------------------------------
+
+        sensorid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SENSOR, 'frceef0')
+
+        plt.figure(figsize=(12,6))
+        plt.subplot(3,2,1)
+        plt.plot(range(len(self.SD[sensorid])),self.SD[sensorid],label="left gripper force")
+        plt.xlabel('Time (s)')
+        plt.ylabel('Force (N)')
+        plt.title('Left End Effector Force')
+        plt.legend()
+
+        sensorid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SENSOR, 'frceef1')
+
+        plt.subplot(3,2,2)
+        plt.plot(range(len(self.SD[sensorid])),self.SD[sensorid],label="right gripper force")
+        plt.xlabel('Time (s)')
+        plt.ylabel('Force (N)')
+        plt.title('Right End Effector Force')
+        plt.legend()
+        
+        sensorid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SENSOR, 'trqeef0')
+
+        plt.subplot(3,2,3)
+        plt.plot(range(len(self.SD[sensorid])),self.SD[sensorid],label="left gripper torque")
+        plt.xlabel('Time (s)')
+        plt.ylabel('Torque (N)')
+        plt.title('Left End Effector Force')
+        plt.legend()
+
+        sensorid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SENSOR, 'trqeef0')
+
+        plt.subplot(3,2,4)
+        plt.plot(range(len(self.SD[sensorid])),self.SD[sensorid],label="right gripper torque")
+        plt.xlabel('Time (s)')
+        plt.ylabel('Torque (N)')
+        plt.title('Right End Effector Torque')
+        plt.legend()
+        
+        sensorid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SENSOR, 'LAjaf7')
+
+        plt.subplot(3,2,5)
+        plt.plot(range(len(self.SD[sensorid])),self.SD[sensorid],label="left joint7 force")
+        plt.xlabel('Time (s)')
+        plt.ylabel('Force (N)')
+        plt.title('Left joint7 Force')
+        plt.legend()
+
+        sensorid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SENSOR, 'RAjaf7')
+
+        plt.subplot(3,2,6)
+        plt.plot(range(len(self.SD[sensorid])),self.SD[sensorid],label="right joint7 force")
+        plt.xlabel('Time (s)')
+        plt.ylabel('Force (N)')
+        plt.title('Right joint7 Force')
+        plt.legend()
+
+        plt.tight_layout()
+        plt.show()

@@ -1,0 +1,30 @@
+<mujocoinclude>
+
+<!-- site force torque sensors -->
+    <sensor>
+        <force name="frceef0" site="end_effector"/>
+        <torque name="trqeef0" site="end_effector"/>
+        <force name="frceef1" site="end_effector1"/>
+        <torque name="trqeef1" site="end_effector1"/>
+    </sensor>
+
+<!-- joint actuator force sensors -->
+    <sensor>
+        <jointactuatorfrc name="LAjaf1" joint="left_panda_joint1"/>
+        <jointactuatorfrc name="LAjaf2" joint="left_panda_joint2"/>
+        <jointactuatorfrc name="LAjaf3" joint="left_panda_joint3"/>
+        <jointactuatorfrc name="LAjaf4" joint="left_panda_joint4"/>
+        <jointactuatorfrc name="LAjaf5" joint="left_panda_joint5"/>
+        <jointactuatorfrc name="LAjaf6" joint="left_panda_joint6"/>
+        <jointactuatorfrc name="LAjaf7" joint="left_panda_joint7"/>
+
+        <jointactuatorfrc name="RAjaf1" joint="right_panda_joint1"/>
+        <jointactuatorfrc name="RAjaf2" joint="right_panda_joint2"/>
+        <jointactuatorfrc name="RAjaf3" joint="right_panda_joint3"/>
+        <jointactuatorfrc name="RAjaf4" joint="right_panda_joint4"/>
+        <jointactuatorfrc name="RAjaf5" joint="right_panda_joint5"/>
+        <jointactuatorfrc name="RAjaf6" joint="right_panda_joint6"/>
+        <jointactuatorfrc name="RAjaf7" joint="right_panda_joint7"/>
+
+    </sensor>
+</mujocoinclude>

@@ -3,7 +3,6 @@ import mujoco.viewer
 import numpy as np
 import time
 import argparse as ap
-import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
 
 
@@ -92,16 +91,7 @@ def main():
     DtrajL_pre = create_quintic_trajectory(init_pose_L, pre_grasp_pose_L, 1500)
     DtrajR_pre = create_quintic_trajectory(init_pose_R, pre_grasp_pose_R, 1500)
 
-    time_steps = []
-    erL_list = []
-    erR_list = []
-    posL_list = []
-    posR_list = []
-    erL_joint = []
-    erR_joint = []
-    forceL_list = []
-    forceR_list = []
-
+    
     jacP = controller.jac
 
 
@@ -153,22 +143,8 @@ def main():
  
         controller.armCtrl(jacP)
 
-        erL = np.linalg.norm(controller.dxL)
-        erR = np.linalg.norm(controller.dxR)
-        # print("Error Left: ", erL_joint)
-
-        # Collect data for plotting
-        time_steps.append(len(time_steps) * dt)
-        erL_list.append(erL)
-        erR_list.append(erR)
-        posL_list.append(data.mocap_pos[controller.mocap_idL].copy())
-        posR_list.append(data.mocap_pos[controller.mocap_idR].copy())
-        erL_joint.append(np.linalg.norm(controller.joint_errorL))  # Example of joint angle error collection
-        erR_joint.append(np.linalg.norm(controller.joint_errorR))  # Example of joint angle error collection
-
-        forceL_list.append(np.linalg.norm(controller.tau[8]))  # Example of force collection
-        forceR_list.append(np.linalg.norm(controller.tau[17]))  # Example of force collection
-
+        erL = controller.erL
+        erR = controller.erR
 
         if(stage == 1):
             controller.gripperCtrl("open", "both")
@@ -182,75 +158,13 @@ def main():
             viewer.close()
 
         mujoco.mj_step(model, data)
+
         jacP = controller.jac
+        controller.SD.append(data.sensordata)
+
         viewer.sync()
 
-    # Convert lists to numpy arrays for easier manipulation
-    time_steps = np.array(time_steps)
-    erL_list = np.array(erL_list)
-    erR_list = np.array(erR_list)
-    posL_list = np.array(posL_list)
-    posR_list = np.array(posR_list)
-    erL_joint = np.array(erL_joint)
-    erR_joint = np.array(erR_joint)
-    forceL_list = np.array(forceL_list)
-    forceR_list = np.array(forceR_list)
-
-
-    # Plot position errors in Cartesian space for both arms
-    plt.figure(figsize=(12, 6))
-
-    plt.subplot(3, 2, 1)
-    plt.plot(time_steps, erL_list, label='Left Arm Position Error')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Position Error (m)')
-    plt.title('Left Arm Position Error in Cartesian Space')
-    plt.legend()
-
-    plt.subplot(3, 2, 2)
-    plt.plot(time_steps, erR_list, label='Right Arm Position Error')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Position Error (m)')
-    plt.title('Right Arm Position Error in Cartesian Space')
-    plt.legend()
-
-    # Plot joint angle errors for both arms
-    plt.subplot(3, 2, 3)
-    plt.plot(time_steps, erL_joint, label='Left Arm Joint Angle Error')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Joint Angle Error (rad)')
-    plt.title('Left Arm Joint Angle Error')
-    plt.legend()
-
-    plt.subplot(3, 2, 4)
-    plt.plot(time_steps, erR_joint, label='Right Arm Joint Angle Error')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Joint Angle Error (rad)')
-    plt.title('Right Arm Joint Angle Error')
-    plt.legend()
-
-    # plt.tight_layout()
-    # plt.show()
-
-    # # Plot force of the end effector for each timestep
-    # plt.figure(figsize=(12, 6))
-
-    plt.subplot(3, 2, 5)
-    plt.plot(time_steps, forceL_list, label='Left Arm End Effector Force')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Force (N)')
-    plt.title('Left Arm End Effector Force')
-    plt.legend()
-
-    plt.subplot(3, 2, 6)
-    plt.plot(time_steps, forceR_list, label='Right Arm End Effector Force')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Force (N)')
-    plt.title('Right Arm End Effector Force')
-    plt.legend()
-
-    plt.tight_layout()
-    plt.show()
+    controller.makeplots()
 
 if __name__ == "__main__":
     main()

@@ -3,6 +3,7 @@
     <include file="panda/assets/basic_scene.xml" />
     <include file="panda/assets/assets.xml" />
     <include file="panda/assets/gripper_assets.xml" />
+    <include file="panda/assets/sensors.xml" />
     <compiler meshdir="" />
     <option noslip_iterations="20"> </option>
     <!-- <option condim="6"> </option> -->
