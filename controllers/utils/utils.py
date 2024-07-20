@@ -1,5 +1,6 @@
 from scipy.spatial.transform import Rotation as R
 import numpy as np
+import mujoco
 
 class RotationUtils:
     def __init__(self) -> None:
@@ -16,3 +17,12 @@ class RotationUtils:
             return(r.as_euler(outformat,degrees))
         else:
             raise(ValueError)
+        
+    
+    def eefPose(self,data,eefname):
+        eefPos = data.site(eefname).xpos
+        eefQuat = np.zeros(4)
+        mujoco.mju_mat2Quat(eefQuat,data.site(eefname).xmat)
+        eefpose = np.concatenate((eefPos,eefQuat))
+        return eefpose
+
