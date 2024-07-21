@@ -5,6 +5,8 @@
     <include file="panda/assets/gripper_assets.xml" />
     <include file="panda/assets/sensors.xml" />
 
+    <!-- change this for different objects -->
+
     <include file="panda/assets/chair.xml"/>
     <!-- <include file="panda/assets/monitor.xml"/> -->
 
