@@ -250,6 +250,8 @@ class Impedance:
         self.joint_trajR = []
         self.forceL_list = []
         self.forceR_list = []
+        self.object_pos = []
+        self.object_quat = []
         self.SD = {}
         self.SD["left_wrist_force"] = []
         self.SD["right_wrist_force"] = []
@@ -290,14 +292,15 @@ class Impedance:
         self.joint_trajR.append(self.data.qpos[self.dof_ids[9:18]].copy())
         self.forceL_list.append(np.linalg.norm(self.tau[8]))  # Example of force collection
         self.forceR_list.append(np.linalg.norm(self.tau[17]))  # Example of force collection
-
+        self.object_pos.append(self.data.body("collision_object").xpos.copy())
+        self.object_quat.append(self.data.body("collision_object").xquat.copy())
         
         self.SD["left_wrist_force"].insert(-1,self.data.sensor("LAjaf7").data.copy())
         self.SD["right_wrist_force"].append(self.data.sensor("RAjaf7").data.copy())
         self.SD["left_finger1_force"].append(self.data.sensor("LHjafF1").data.copy())
         self.SD["left_finger2_force"].append(self.data.sensor("LHjafF2").data.copy())
         self.SD["right_finger1_force"].append(self.data.sensor("RHjafF1").data.copy())
-        self.SD["right_finger2_force"].append(self.data.sensor("RHjafF2").data.copy())
+        self.SD["right_finger2_force"].append(self.data.sensor("RHjafF2").data.copy())        
 
     def makeplots(self):
         # Convert lists to numpy arrays for easier manipulation
@@ -330,6 +333,8 @@ class Impedance:
         self.joint_trajR = np.array(self.joint_trajR)
         self.forceL_list = np.array(self.forceL_list)
         self.forceR_list = np.array(self.forceR_list)
+        self.object_pos = np.array(self.object_pos)
+        self.object_quat = np.array(self.object_quat)
 
         plt.figure(figsize=(12, 6))
 
@@ -374,7 +379,7 @@ class Impedance:
         plt.tight_layout()
         plt.show()
 
-        # Plot for errors in Cartesian space for both arms
+        # Plot for errors in Cartesian space for both arms --------------------------------------------------------
         plt.figure(figsize=(12, 6))
 
         plt.subplot(4, 2, 1)
@@ -385,7 +390,6 @@ class Impedance:
         plt.ylabel('Position Error (m)')
         plt.title('Left Arm Position Errors in Cartesian Space')
         plt.legend()
-
 
         plt.subplot(4, 2, 2)
         plt.plot(self.time_steps, self.dxR_xlist, label='x')
@@ -448,7 +452,7 @@ class Impedance:
         plt.tight_layout()
         plt.show()
 
-        # Plot for joint trajectories
+        # Plot for joint trajectories -----------------------------------------------------------------------------
         plt.figure(figsize=(12, 6))
 
         plt.subplot(2, 1, 1)
@@ -484,8 +488,28 @@ class Impedance:
         plt.tight_layout()
         plt.show()
 
-        #sensor data ---------------------------------------------------------------------------------------
+        #plot for object trajectories ----------------------------------------------------------------------
+        plt.figure(figsize=(12,6))
+        plt.subplot(2,2,1)
+        plt.plot(self.time_steps, self.object_pos[:,0], label='x')
+        plt.plot(self.time_steps, self.object_pos[:,1], label='y')
+        plt.plot(self.time_steps, self.object_pos[:,2], label='z')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Object Position')
+        plt.title('Object Position')
+        plt.legend()
 
+        plt.subplot(2,2,2)
+        plt.plot(self.time_steps, self.object_quat[:,0], label='w')
+        plt.plot(self.time_steps, self.object_quat[:,1], label='x')
+        plt.plot(self.time_steps, self.object_quat[:,2], label='y')
+        plt.plot(self.time_steps, self.object_quat[:,3], label='z')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Object Rotation')
+        plt.title('Object Rotation')
+        plt.legend()
+
+        #sensor data ---------------------------------------------------------------------------------------
 
         plt.figure(figsize=(12,6))
 
