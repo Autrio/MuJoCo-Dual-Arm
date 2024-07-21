@@ -99,12 +99,32 @@ class Impedance:
 
         #arrays for plotting
         self.time_steps = []
+        self.dxL_xlist = []
+        self.dxL_ylist = []
+        self.dxL_zlist = []
+        self.dxR_xlist = []
+        self.dxR_ylist = []
+        self.dxR_zlist = []
+        self.error_quatL_xlist = []
+        self.error_quatL_ylist = []
+        self.error_quatL_zlist = []
+        self.error_quatL_wlist = []
+        self.error_quatR_xlist = []
+        self.error_quatR_ylist = []
+        self.error_quatR_zlist = []
+        self.error_quatR_wlist = []
         self.erL_list = []
         self.erR_list = []
+        self.er_quatL_list = []
+        self.er_quatR_list = []
         self.posL_list = []
         self.posR_list = []
+        self.quatL_list = []
+        self.quatR_list = []
         self.erL_joint = []
         self.erR_joint = []
+        self.joint_trajL = []
+        self.joint_trajR = []
         self.forceL_list = []
         self.forceR_list = []
         self.SD = []
@@ -178,9 +198,6 @@ class Impedance:
         else:
             self.Mx = np.linalg.pinv(self.Mx_inv, rcond=1e-2)
 
-        self.joint_errorL = self.q0[:9] - self.data.qpos[self.dof_idsL]
-        self.joint_errorR = self.q0[9:18] - self.data.qpos[self.dof_idsR]
-
         self.jacPrev = JacP
         
         self.Jdot = (self.jac - self.jacPrev)/self.integration_dt
@@ -220,12 +237,30 @@ class Impedance:
         self.erL = np.linalg.norm(self.dxL)
         self.erR = np.linalg.norm(self.dxR)
         self.time_steps.append(len(self.time_steps) * self.dt)
+        self.dxL_xlist.append(self.dxL[0])
+        self.dxL_ylist.append(self.dxL[1])
+        self.dxL_zlist.append(self.dxL[2])
+        self.dxR_xlist.append(self.dxR[0])
+        self.dxR_ylist.append(self.dxR[1])
+        self.dxR_zlist.append(self.dxR[2])
+        self.error_quatL_xlist.append(self.error_quatL[0])
+        self.error_quatL_ylist.append(self.error_quatL[1])
+        self.error_quatL_zlist.append(self.error_quatL[2])
+        self.error_quatL_wlist.append(self.error_quatL[3])
+        self.error_quatR_xlist.append(self.error_quatR[0])
+        self.error_quatR_ylist.append(self.error_quatR[1])
+        self.error_quatR_zlist.append(self.error_quatR[2])
+        self.error_quatR_wlist.append(self.error_quatR[3])
         self.erL_list.append(self.erL)
         self.erR_list.append(self.erR)
+        self.er_quatL_list.append(np.linalg.norm(self.error_quatL))
+        self.er_quatR_list.append(np.linalg.norm(self.error_quatR))
         self.posL_list.append(self.data.mocap_pos[self.mocap_idL].copy())
         self.posR_list.append(self.data.mocap_pos[self.mocap_idR].copy())
-        self.erL_joint.append(np.linalg.norm(self.joint_errorL))  # Example of joint angle error collection
-        self.erR_joint.append(np.linalg.norm(self.joint_errorR))  # Example of joint angle error collection
+        self.quatL_list.append(self.data.mocap_quat[self.mocap_idL].copy())
+        self.quatR_list.append(self.data.mocap_quat[self.mocap_idR].copy())
+        self.joint_trajL.append(self.data.qpos[self.dof_ids[:9]].copy())
+        self.joint_trajR.append(self.data.qpos[self.dof_ids[9:18]].copy())
         self.forceL_list.append(np.linalg.norm(self.tau[8]))  # Example of force collection
         self.forceR_list.append(np.linalg.norm(self.tau[17]))  # Example of force collection
 
@@ -253,71 +288,194 @@ class Impedance:
 
 
     def makeplots(self):
-            # Convert lists to numpy arrays for easier manipulation
+        # Convert lists to numpy arrays for easier manipulation
         self.time_steps = np.array(self.time_steps)
+        self.dxL_xlist = np.array(self.dxL_xlist)
+        self.dxL_ylist = np.array(self.dxL_ylist)
+        self.dxL_zlist = np.array(self.dxL_zlist)
+        self.dxR_xlist = np.array(self.dxR_xlist)
+        self.dxR_ylist = np.array(self.dxR_ylist)
+        self.dxR_zlist = np.array(self.dxR_zlist)
+        self.error_quatL_xlist = np.array(self.error_quatL_xlist)
+        self.error_quatL_ylist = np.array(self.error_quatL_ylist)
+        self.error_quatL_zlist = np.array(self.error_quatL_zlist)
+        self.error_quatL_wlist = np.array(self.error_quatL_wlist)
+        self.error_quatR_xlist = np.array(self.error_quatR_xlist)
+        self.error_quatR_ylist = np.array(self.error_quatR_ylist)
+        self.error_quatR_zlist = np.array(self.error_quatR_zlist)
+        self.error_quatR_wlist = np.array(self.error_quatR_wlist)        
         self.erL_list = np.array(self.erL_list)
         self.erR_list = np.array(self.erR_list)
+        self.er_quatL_list = np.array(self.er_quatL_list)
+        self.er_quatR_list = np.array(self.er_quatR_list)
         self.posL_list = np.array(self.posL_list)
         self.posR_list = np.array(self.posR_list)
+        self.quatL_list = np.array(self.quatL_list)
+        self.quatR_list = np.array(self.quatR_list)
         self.erL_joint = np.array(self.erL_joint)
         self.erR_joint = np.array(self.erR_joint)
+        self.joint_trajL = np.array(self.joint_trajL)
+        self.joint_trajR = np.array(self.joint_trajR)
         self.forceL_list = np.array(self.forceL_list)
         self.forceR_list = np.array(self.forceR_list)
 
-        # Plot position errors in Cartesian space for both arms
         plt.figure(figsize=(12, 6))
 
-        plt.subplot(3, 2, 1)
-        plt.plot(self.time_steps, self.erL_list, label='Left Arm Position Error')
+        plt.subplot(2, 2, 1)
+        plt.plot(self.time_steps, self.posL_list[:, 0], label='x')
+        plt.plot(self.time_steps, self.posL_list[:, 1], label='y')
+        plt.plot(self.time_steps, self.posL_list[:, 2], label='z')
         plt.xlabel('Time (s)')
-        plt.ylabel('Position Error (m)')
-        plt.title('Left Arm Position Error in Cartesian Space')
+        plt.ylabel('Position (m)')
+        plt.title('Left Arm End-Effector Position in Cartesian Space')
         plt.legend()
 
-        plt.subplot(3, 2, 2)
-        plt.plot(self.time_steps, self.erR_list, label='Right Arm Position Error')
+        plt.subplot(2, 2, 2)
+        plt.plot(self.time_steps, self.posR_list[:, 0], label='x')
+        plt.plot(self.time_steps, self.posR_list[:, 1], label='y')
+        plt.plot(self.time_steps, self.posR_list[:, 2], label='z')
         plt.xlabel('Time (s)')
-        plt.ylabel('Position Error (m)')
-        plt.title('Right Arm Position Error in Cartesian Space')
+        plt.ylabel('Position (m)')
+        plt.title('Right Arm End-Effector Position in Cartesian Space')
         plt.legend()
 
-        # Plot joint angle errors for both arms
-        plt.subplot(3, 2, 3)
-        plt.plot(self.time_steps, self.erL_joint, label='Left Arm Joint Angle Error')
+        plt.subplot(2, 2, 3)
+        plt.plot(self.time_steps, self.quatL_list[:, 0], label='x')
+        plt.plot(self.time_steps, self.quatL_list[:, 1], label='y')
+        plt.plot(self.time_steps, self.quatL_list[:, 2], label='z')
+        plt.plot(self.time_steps, self.quatL_list[:, 3], label='w')
         plt.xlabel('Time (s)')
-        plt.ylabel('Joint Angle Error (rad)')
-        plt.title('Left Arm Joint Angle Error')
+        plt.ylabel('Quaternion')
+        plt.title('Left Arm End-Effector Orientation in Quaternion Space')
         plt.legend()
 
-        plt.subplot(3, 2, 4)
-        plt.plot(self.time_steps, self.erR_joint, label='Right Arm Joint Angle Error')
+        plt.subplot(2, 2, 4)
+        plt.plot(self.time_steps, self.quatR_list[:, 0], label='x')
+        plt.plot(self.time_steps, self.quatR_list[:, 1], label='y')
+        plt.plot(self.time_steps, self.quatR_list[:, 2], label='z')
+        plt.plot(self.time_steps, self.quatR_list[:, 3], label='w')
         plt.xlabel('Time (s)')
-        plt.ylabel('Joint Angle Error (rad)')
-        plt.title('Right Arm Joint Angle Error')
-        plt.legend()
-
-        # plt.tight_layout()
-        # plt.show()
-
-        # # Plot force of the end effector for each timestep
-        # plt.figure(figsize=(12, 6))
-
-        plt.subplot(3, 2, 5)
-        plt.plot(self.time_steps, self.forceL_list, label='Left Arm End Effector Force')
-        plt.xlabel('Time (s)')
-        plt.ylabel('Force (N)')
-        plt.title('Left Arm End Effector Force')
-        plt.legend()
-
-        plt.subplot(3, 2, 6)
-        plt.plot(self.time_steps, self.forceR_list, label='Right Arm End Effector Force')
-        plt.xlabel('Time (s)')
-        plt.ylabel('Force (N)')
-        plt.title('Right Arm End Effector Force')
+        plt.ylabel('Quaternion')
+        plt.title('Right Arm End-Effector Orientation in Quaternion Space')
         plt.legend()
 
         plt.tight_layout()
-        plt.show()
+        plt.savefig('Figures/Grasp_1/1/position_orientation_ee.png')
+        # plt.show()
+
+
+
+        # Plot for errors in Cartesian space for both arms
+        plt.figure(figsize=(12, 6))
+
+        plt.subplot(4, 2, 1)
+        plt.plot(self.time_steps, self.dxL_xlist, label='x')
+        plt.plot(self.time_steps, self.dxL_ylist, label='y')
+        plt.plot(self.time_steps, self.dxL_zlist, label='z')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Position Error (m)')
+        plt.title('Left Arm Position Errors in Cartesian Space')
+        plt.legend()
+
+
+        plt.subplot(4, 2, 2)
+        plt.plot(self.time_steps, self.dxR_xlist, label='x')
+        plt.plot(self.time_steps, self.dxR_ylist, label='y')
+        plt.plot(self.time_steps, self.dxR_zlist, label='z')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Position Error (m)')
+        plt.title('Right Arm Position Errors in Cartesian Space')
+        plt.legend()
+
+        plt.subplot(4, 2, 3)
+        plt.plot(self.time_steps, self.error_quatL_xlist, label='x')
+        plt.plot(self.time_steps, self.error_quatL_ylist, label='y')
+        plt.plot(self.time_steps, self.error_quatL_zlist, label='z')
+        plt.plot(self.time_steps, self.error_quatL_wlist, label='w')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Quaternion Error')
+        plt.title('Left Arm Orientation Error in Quaternion Space')
+        plt.legend()
+
+        plt.subplot(4, 2, 4)
+        plt.plot(self.time_steps, self.error_quatR_xlist, label='x')
+        plt.plot(self.time_steps, self.error_quatR_ylist, label='y')
+        plt.plot(self.time_steps, self.error_quatR_zlist, label='z')
+        plt.plot(self.time_steps, self.error_quatR_wlist, label='w')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Quaternion Error')
+        plt.title('Right Arm Orientation Error in Quaternion Space')
+        plt.legend()
+
+
+        plt.subplot(4, 2, 5)
+        plt.plot(self.time_steps, self.erL_list, label='Left Arm Position Error')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Position Error (m)')
+        plt.title('Left Arm Position Error (Norm) in Cartesian Space')
+        plt.legend()
+
+        plt.subplot(4, 2, 6)
+        plt.plot(self.time_steps, self.erR_list, label='Right Arm Position Error')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Position Error (m)')
+        plt.title('Right Arm Position Error (Norm) in Cartesian Space')
+        plt.legend()
+
+        plt.subplot(4, 2, 7)
+        plt.plot(self.time_steps, self.er_quatL_list, label='Left Arm Orientation Error')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Orientation Error')
+        plt.title('Left Arm Orientation Error (Norm) in Quaternion Space')
+        plt.legend()
+
+        plt.subplot(4, 2, 8)
+        plt.plot(self.time_steps, self.er_quatR_list, label='Right Arm Orientation Error')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Orientation Error')
+        plt.title('Right Arm Orientation Error (Norm) in Quaternion Space')
+        plt.legend()
+               
+        plt.tight_layout()
+        plt.savefig('Figures/Grasp_1/1/errors.png')
+        # plt.show()
+
+        # Plot for joint trajectories
+        plt.figure(figsize=(12, 6))
+
+        plt.subplot(2, 1, 1)
+        plt.plot(self.time_steps, self.joint_trajL[:, 0], label='Joint 1')
+        plt.plot(self.time_steps, self.joint_trajL[:, 1], label='Joint 2')
+        plt.plot(self.time_steps, self.joint_trajL[:, 2], label='Joint 3')
+        plt.plot(self.time_steps, self.joint_trajL[:, 3], label='Joint 4')
+        plt.plot(self.time_steps, self.joint_trajL[:, 4], label='Joint 5')
+        plt.plot(self.time_steps, self.joint_trajL[:, 5], label='Joint 6')
+        plt.plot(self.time_steps, self.joint_trajL[:, 6], label='Joint 7')
+        plt.plot(self.time_steps, self.joint_trajL[:, 7], label='Left_gripper')
+        plt.plot(self.time_steps, self.joint_trajL[:, 8], label='Right_gripper')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Joint Angles (rad)')
+        plt.title('Joint Angles for Left Arm')
+        plt.legend()
+
+        plt.subplot(2, 1, 2)
+        plt.plot(self.time_steps, self.joint_trajR[:, 0], label='Joint 1')
+        plt.plot(self.time_steps, self.joint_trajR[:, 1], label='Joint 2')
+        plt.plot(self.time_steps, self.joint_trajR[:, 2], label='Joint 3')
+        plt.plot(self.time_steps, self.joint_trajR[:, 3], label='Joint 4')
+        plt.plot(self.time_steps, self.joint_trajR[:, 4], label='Joint 5')
+        plt.plot(self.time_steps, self.joint_trajR[:, 5], label='Joint 6')
+        plt.plot(self.time_steps, self.joint_trajR[:, 6], label='Joint 7')
+        plt.plot(self.time_steps, self.joint_trajR[:, 7], label='Left_gripper')
+        plt.plot(self.time_steps, self.joint_trajR[:, 8], label='Right_gripper')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Joint Angles (rad)')
+        plt.title('Joint Angles for Right Arm')
+        plt.legend()
+
+        plt.tight_layout()
+        plt.savefig('Figures/Grasp_1/1/joint_trajectories.png')
+
 
         #sensor data ---------------------------------------------------------------------------------------
 
@@ -377,4 +535,13 @@ class Impedance:
         plt.legend()
 
         plt.tight_layout()
+        plt.savefig('Figures/Grasp_1/1/ft_sensor_data.png')
+
+
+
+        # # Plot for Object trajectory and orientation
+        # plt.figure(figsize=(12,6))
+        # plt.subplot(2,1,1)
+
+
         plt.show()
