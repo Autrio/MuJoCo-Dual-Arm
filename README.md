@@ -2,8 +2,8 @@
 Franka Panda Bi-Manual Manipulation simulated on MuJoCo
 
 ## Large Object manipulation
-[Grasp_5_4.webm](https://github.com/user-attachments/assets/31ce04cf-ceda-4e61-a00c-c0bf74e08b00)
 
+https://github.com/user-attachments/assets/f984b51f-ebf6-4123-88dc-18e3e2745001
 
 ## Visualising The Model
 In the repository directory ,
