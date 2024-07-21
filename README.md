@@ -14,6 +14,9 @@ python3 -m mujoco.viewer --mjcf=/full/path/to/model/file.xml
 ## Model Select Parameter:
 - `-d dual` or `--model dual` for Two separated Panda arms 
 - `-d bimanual` or `--model bimanual` for Two Panda Arms connected at shoulder Joints to a torso
+- `-v False` or `--toggle-mocap False` to turn off frame and error visualisation (mocap bodies)
+- `-t <FLOAT>` to set maximum trajectory following error
+
 
 
 ## For Kinematics based Impedance Control:
@@ -32,9 +35,19 @@ python3 -m examples.tests.OpSpcTest -d dual
 ```console
 python3 -m examples.pnp -d dual
 ```
+without frame visuals
+```console
+python3 -m examples.pnp -d dual -v False
+```
+
+with different error tolerance
+```console
+python3 -m examples.pnp -d dual -t 0.1 
+```
+
 **NOTE : Experimental** 
 
 **TODO** : 
-- Fix gripper command and actuation to prevent slipping
+- Test for different objects
 - Adjust to optimal gain parameters
 - Trajectory optimisation and motion planning

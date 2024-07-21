@@ -100,7 +100,7 @@ class Impedance:
         #arrays for plotting
         self.setupDatacap()
 
-    def resetViewer(self):
+    def resetViewer(self,flag):
         # Reset the simulation.
         mujoco.mj_resetDataKeyframe(self.model, self.data, self.key_id)
         mujoco.mj_forward(self.model, self.data)
@@ -109,7 +109,8 @@ class Impedance:
         mujoco.mjv_defaultFreeCamera(self.model, self.viewer.cam)
 
         # Enable site frame visualization.
-        self.viewer.opt.frame = mujoco.mjtFrame.mjFRAME_SITE
+        if(flag):
+            self.viewer.opt.frame = mujoco.mjtFrame.mjFRAME_SITE    
 
     def armCtrl(self,JacP):
 

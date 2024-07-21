@@ -17,12 +17,20 @@ parser.add_argument("-d", "--model", type=str, help="""Choose variant of dual pa
                     'dual' for individual separate arms, 'bimanual' for arms connected
                      to a torso at shoulder joint. Default is 'dual'""")
 
+parser.add_argument("-m","--toggle-mocap", type=str, help=""" Choose whether to toggle MoCap visuals
+                    'True' for visuals, 'False' otherwise default is True""")
+
+parser.add_argument("-t","--tolerance",type=float,help="""Set trajectory following error limit
+                    default 0.04 units
+                    NOTE: Tendency to stall if tolerance is too low (lower than steady state error)""")
+
 args = parser.parse_args()
 
 if(args.model == "bimanual"):
     model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/bimanual_panda.xml";
 else:
     model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/dual_panda.xml";
+
 
 model = mujoco.MjModel.from_xml_path(model_path)
 data = mujoco.MjData(model)
@@ -32,6 +40,18 @@ viewer = mujoco.viewer.launch_passive(
     show_left_ui=False,
     show_right_ui=False
 )
+
+visFlag = 1
+
+if(args.toggle_mocap == "False"):
+    model.geom(model.body("targetL").geomadr).rgba = [0.0, 0.0, 0.0, 0.0]
+    model.geom(model.body("targetR").geomadr).rgba = [0.0, 0.0, 0.0, 0.0]
+    model.site(model.body("targetL").geomadr).rgba = [0.0, 0.0, 0.0, 0.0]
+    model.site(model.body("targetR").geomadr).rgba = [0.0, 0.0, 0.0, 0.0]
+    visFlag = 0
+else:
+    pass
+
 
 Ipos = np.asarray([500.0, 500.0, 500.0])  # [N/m]
 Iori = np.asarray([50.0, 50.0, 50.0])  # [Nm/rad]
@@ -43,20 +63,12 @@ Kori = 4
 integration_dt = 0.1
 gravity_compensation = True
 dt = 0.002
+object_scale = 0.1
 
-def main():
-    assert mujoco.__version__ >= "3.1.0", "Please upgrade to mujoco 3.1.0 or later."
+def run(controller,tolerance, graspIdx = 15):
+    if(not tolerance):
+       tolerance = 0.04
 
-    controller = Impedance(model, data, viewer)
-
-    controller.setParams(Ipos=Ipos, Iori=Iori,
-                         Kpos=Kpos, Kori=Kori, Kp_null=Kp_null,
-                         D=D, integration_dt=integration_dt, dt=dt,
-                         gravity_compensation=gravity_compensation)
-    
-    controller.resetViewer()
-
-    tolerance = 0.04
     erL = 1000
     erR = 1000
 
@@ -65,8 +77,14 @@ def main():
     k = 0
 
     stage = 1
+
+    grasps = np.load("examples/grasps/graspsChair.npy")
+    graspL = grasps[graspIdx][1]
+    graspR = grasps[graspIdx][0]
+    objStrPos = [0.0,0.3,0.22]
     
     Util = RotationUtils()
+
 
     init_pose_L = Util.eefPose(data,"end_effector")
     init_pose_R = Util.eefPose(data,"end_effector1")
@@ -79,11 +97,15 @@ def main():
 
 
     init_pose_L = (list(data.mocap_pos[controller.mocap_idL]), list(data.mocap_quat[controller.mocap_idL]))
-    final_pose_L = ([-0.10, 0.33, 0.275],[0, 0, 1, 0])
+    # final_pose_L = ([-0.10, 0.33, 0.275],[0, 0, 1, 0])
     # final_pose_L = ([-0.12, 0.33, 0.4],[1, 0, 1, 0])
+    final_pose_L = Util.Tmat2pose(graspL,object_scale,objStrPos)
+
     init_pose_R = (list(data.mocap_pos[controller.mocap_idR]), list(data.mocap_quat[controller.mocap_idR]))
     # final_pose_R = ([0.03, 0.33, 0.17],[0, 1, 0, -1])
-    final_pose_R = ([0.03, 0.33, 0.275], [0, 1, 0, 0])
+    # final_pose_R = ([0.03, 0.33, 0.275], [0, 1, 0, 0])
+    final_pose_R = Util.Tmat2pose(graspR,object_scale,objStrPos)
+
     
     pre_grasp_pose_L = ([-0.10, 0.33, 0.518],[0, 0, 1, 0]) 
     pre_grasp_pose_R = ([0.03, 0.33, 0.518], [0, 1, 0, 0])
@@ -162,6 +184,20 @@ def main():
         jacP = controller.jac
 
         viewer.sync()
+
+def main():
+    assert mujoco.__version__ >= "3.1.0", "Please upgrade to mujoco 3.1.0 or later."
+
+    controller = Impedance(model, data, viewer)
+
+    controller.setParams(Ipos=Ipos, Iori=Iori,
+                         Kpos=Kpos, Kori=Kori, Kp_null=Kp_null,
+                         D=D, integration_dt=integration_dt, dt=dt,
+                         gravity_compensation=gravity_compensation)
+    
+    controller.resetViewer(visFlag)
+
+    run(controller,args.tolerance)
 
     # controller.makeplots()
 
