@@ -1,0 +1,6 @@
+<mujocoinclude>
+    <asset>
+        <mesh name="monitor_col" file="../meshes/collision/objects/monitor.stl" scale = "0.02 0.02 0.02"/>
+        <mesh name="monitor_viz" file="../meshes/visual/objects/monitor.stl" scale = "0.02 0.02 0.02"/>
+    </asset>
+</mujocoinclude>

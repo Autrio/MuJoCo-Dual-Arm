@@ -163,7 +163,7 @@ def main():
 
         viewer.sync()
 
-    controller.makeplots()
+    # controller.makeplots()
 
 if __name__ == "__main__":
     main()

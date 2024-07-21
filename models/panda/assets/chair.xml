@@ -1,0 +1,6 @@
+<mujocoinclude>
+    <asset>
+        <mesh name="chair_col" file="../meshes/collision/objects/chair.stl" scale = "1 1 1"/>
+        <mesh name="chair_viz" file="../meshes/visual/objects/chair.stl" scale = "1 1 1"/>
+    </asset>
+</mujocoinclude>
