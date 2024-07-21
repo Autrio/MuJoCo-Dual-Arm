@@ -38,8 +38,7 @@ viewer = mujoco.viewer.launch_passive(
     model=model,
     data=data,
     show_left_ui=False,
-    show_right_ui=False
-)
+    show_right_ui=False)
 
 visFlag = 1
 
