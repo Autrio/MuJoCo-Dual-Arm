@@ -98,37 +98,7 @@ class Impedance:
         self.error_quatR = np.zeros(4)
 
         #arrays for plotting
-        self.time_steps = []
-        self.dxL_xlist = []
-        self.dxL_ylist = []
-        self.dxL_zlist = []
-        self.dxR_xlist = []
-        self.dxR_ylist = []
-        self.dxR_zlist = []
-        self.error_quatL_xlist = []
-        self.error_quatL_ylist = []
-        self.error_quatL_zlist = []
-        self.error_quatL_wlist = []
-        self.error_quatR_xlist = []
-        self.error_quatR_ylist = []
-        self.error_quatR_zlist = []
-        self.error_quatR_wlist = []
-        self.erL_list = []
-        self.erR_list = []
-        self.er_quatL_list = []
-        self.er_quatR_list = []
-        self.posL_list = []
-        self.posR_list = []
-        self.quatL_list = []
-        self.quatR_list = []
-        self.erL_joint = []
-        self.erR_joint = []
-        self.joint_trajL = []
-        self.joint_trajR = []
-        self.forceL_list = []
-        self.forceR_list = []
-        self.SD = []
-
+        self.setupDatacap()
 
     def resetViewer(self):
         # Reset the simulation.
@@ -198,10 +168,9 @@ class Impedance:
         else:
             self.Mx = np.linalg.pinv(self.Mx_inv, rcond=1e-2)
 
-        self.jacPrev = JacP
-        
+        #compute H(q,qdot)
+        self.jacPrev = JacP        
         self.Jdot = (self.jac - self.jacPrev)/self.integration_dt
-
         self.h = self.data.qfrc_bias[self.dof_ids[:18]]
         self.mu = self.Mx @ (self.jac @ self.M_inv @ self.h + self.Jdot @ self.data.qvel[:18])
 
@@ -209,22 +178,14 @@ class Impedance:
         # Compute generalized forces.
         self.tau = np.zeros(18)
 
-        # self.tau[:9] = self.jac[:,:9].T @ self.Mx @ (self.Kp * self.twistL - self.Kd * (self.jac[:,:9] @ self.data.qvel[self.dof_ids[:9]]))
-        # self.tau[9:18] = self.jac[:,9:18].T @ self.Mx @ (self.Kp * self.twistR - self.Kd * (self.jac[:,9:18] @ self.data.qvel[self.dof_ids[9:18]]))
-
         self.tau[:9] = self.jac[:,:9].T @ (self.Kd * np.concatenate((self.dxL ,roL)) + self.Kp * self.twistL +  self.mu)
         self.tau[9:18] = self.jac[:,9:18].T @ (self.Kd * np.concatenate((self.dxR ,roR)) + self.Kp * self.twistR +  self.mu)
 
-
+        #compute postural constraints
         self.Jbar = self.M_inv @ self.jac.T @ self.Mx
-        
         self.ddq = self.Kp_null * (self.q0 - self.data.qpos[self.dof_ids[:18]]) - self.Kd_null * (self.qd0 - self.data.qvel[self.dof_ids[:18]])
         self.tau1 = self.M @ self.ddq + self.h
         self.tau += (np.eye(self.model.nv-6) - self.jac.T @ self.Jbar.T) @ self.tau1
-
-        # Add gravity compensation.
-        # if self.gravity_compensation:
-        #     self.tau += self.data.qfrc_bias[self.dof_ids[:18]]
 
         # Set the control signal and step the simulation.
         self.data.ctrl[self.actuator_ids] = self.tau[self.actuator_ids]
@@ -234,6 +195,72 @@ class Impedance:
             time.sleep(time_until_next_step)
 
         # Collect data for plotting
+        self.Datacap()
+
+        #return the actuator torques for monitoring
+        return self.tau[self.actuator_ids]
+    
+    def gripperCtrl(self,state,eef):
+        if eef=="both":
+            if(state=="open"):
+                self.data.ctrl[7:9]=10;   #open L gripper
+                self.data.ctrl[16:18]=0.04; #open R gripper
+            elif(state=="close"):
+                self.data.ctrl[7:9]=0.0;   #close L gripper
+                self.data.ctrl[16:18]=0.0; #close R gripper
+        if eef=="left":
+            if(state=="open"):
+                self.data.ctrl[7:9]=0.04;   #open L gripper
+            elif(state=="close"):
+                self.data.ctrl[7:9]=0.0;   #close L gripper
+        if eef=="right":
+            if(state=="open"):
+                self.data.ctrl[16:18]=0.04; #open R gripper
+            elif(state=="close"):
+                self.data.ctrl[16:18]=0.0; #close R gripper
+    
+
+    def setupDatacap(self):
+        self.time_steps = []
+        self.dxL_xlist = []
+        self.dxL_ylist = []
+        self.dxL_zlist = []
+        self.dxR_xlist = []
+        self.dxR_ylist = []
+        self.dxR_zlist = []
+        self.error_quatL_xlist = []
+        self.error_quatL_ylist = []
+        self.error_quatL_zlist = []
+        self.error_quatL_wlist = []
+        self.error_quatR_xlist = []
+        self.error_quatR_ylist = []
+        self.error_quatR_zlist = []
+        self.error_quatR_wlist = []
+        self.erL_list = []
+        self.erR_list = []
+        self.er_quatL_list = []
+        self.er_quatR_list = []
+        self.posL_list = []
+        self.posR_list = []
+        self.quatL_list = []
+        self.quatR_list = []
+        self.erL_joint = []
+        self.erR_joint = []
+        self.joint_trajL = []
+        self.joint_trajR = []
+        self.forceL_list = []
+        self.forceR_list = []
+        self.SD = {}
+        self.SD["left_wrist_force"] = []
+        self.SD["right_wrist_force"] = []
+        self.SD["left_finger1_force"] = []
+        self.SD["left_finger2_force"] = []
+        self.SD["right_finger1_force"] = []
+        self.SD["right_finger2_force"] = []
+        self.iter = 0
+
+        
+    def Datacap(self):
         self.erL = np.linalg.norm(self.dxL)
         self.erR = np.linalg.norm(self.dxR)
         self.time_steps.append(len(self.time_steps) * self.dt)
@@ -264,28 +291,13 @@ class Impedance:
         self.forceL_list.append(np.linalg.norm(self.tau[8]))  # Example of force collection
         self.forceR_list.append(np.linalg.norm(self.tau[17]))  # Example of force collection
 
-        #return the actuator torques for monitoring
-        return self.tau[self.actuator_ids]
-    
-    def gripperCtrl(self,state,eef):
-        if eef=="both":
-            if(state=="open"):
-                self.data.ctrl[7:9]=10;   #open L gripper
-                self.data.ctrl[16:18]=0.04; #open R gripper
-            elif(state=="close"):
-                self.data.ctrl[7:9]=0.0;   #close L gripper
-                self.data.ctrl[16:18]=0.0; #close R gripper
-        if eef=="left":
-            if(state=="open"):
-                self.data.ctrl[7:9]=0.04;   #open L gripper
-            elif(state=="close"):
-                self.data.ctrl[7:9]=0.0;   #close L gripper
-        if eef=="right":
-            if(state=="open"):
-                self.data.ctrl[16:18]=0.04; #open R gripper
-            elif(state=="close"):
-                self.data.ctrl[16:18]=0.0; #close R gripper
-
+        
+        self.SD["left_wrist_force"].insert(-1,self.data.sensor("LAjaf7").data.copy())
+        self.SD["right_wrist_force"].append(self.data.sensor("RAjaf7").data.copy())
+        self.SD["left_finger1_force"].append(self.data.sensor("LHjafF1").data.copy())
+        self.SD["left_finger2_force"].append(self.data.sensor("LHjafF2").data.copy())
+        self.SD["right_finger1_force"].append(self.data.sensor("RHjafF1").data.copy())
+        self.SD["right_finger2_force"].append(self.data.sensor("RHjafF2").data.copy())
 
     def makeplots(self):
         # Convert lists to numpy arrays for easier manipulation
@@ -360,10 +372,7 @@ class Impedance:
         plt.legend()
 
         plt.tight_layout()
-        plt.savefig('Figures/Grasp_1/1/position_orientation_ee.png')
-        # plt.show()
-
-
+        plt.show()
 
         # Plot for errors in Cartesian space for both arms
         plt.figure(figsize=(12, 6))
@@ -437,8 +446,7 @@ class Impedance:
         plt.legend()
                
         plt.tight_layout()
-        plt.savefig('Figures/Grasp_1/1/errors.png')
-        # plt.show()
+        plt.show()
 
         # Plot for joint trajectories
         plt.figure(figsize=(12, 6))
@@ -474,74 +482,47 @@ class Impedance:
         plt.legend()
 
         plt.tight_layout()
-        plt.savefig('Figures/Grasp_1/1/joint_trajectories.png')
-
+        plt.show()
 
         #sensor data ---------------------------------------------------------------------------------------
 
-        sensorid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SENSOR, 'frceef0')
 
         plt.figure(figsize=(12,6))
-        plt.subplot(3,2,1)
-        plt.plot(range(len(self.SD[sensorid])),self.SD[sensorid],label="left gripper force")
-        plt.xlabel('Time (s)')
-        plt.ylabel('Force (N)')
-        plt.title('Left End Effector Force')
-        plt.legend()
 
-        sensorid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SENSOR, 'frceef1')
-
-        plt.subplot(3,2,2)
-        plt.plot(range(len(self.SD[sensorid])),self.SD[sensorid],label="right gripper force")
-        plt.xlabel('Time (s)')
-        plt.ylabel('Force (N)')
-        plt.title('Right End Effector Force')
-        plt.legend()
-        
-        sensorid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SENSOR, 'trqeef0')
-
-        plt.subplot(3,2,3)
-        plt.plot(range(len(self.SD[sensorid])),self.SD[sensorid],label="left gripper torque")
-        plt.xlabel('Time (s)')
-        plt.ylabel('Torque (N)')
-        plt.title('Left End Effector Force')
-        plt.legend()
-
-        sensorid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SENSOR, 'trqeef0')
-
-        plt.subplot(3,2,4)
-        plt.plot(range(len(self.SD[sensorid])),self.SD[sensorid],label="right gripper torque")
-        plt.xlabel('Time (s)')
-        plt.ylabel('Torque (N)')
-        plt.title('Right End Effector Torque')
-        plt.legend()
-        
         sensorid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SENSOR, 'LAjaf7')
-
-        plt.subplot(3,2,5)
-        plt.plot(range(len(self.SD[sensorid])),self.SD[sensorid],label="left joint7 force")
+        
+        plt.subplot(2,2,1)
+        plt.plot(range(len(self.SD["left_wrist_force"])),self.SD["left_wrist_force"][::-1],label="left joint7 force")
         plt.xlabel('Time (s)')
         plt.ylabel('Force (N)')
         plt.title('Left joint7 Force')
         plt.legend()
 
-        sensorid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SENSOR, 'RAjaf7')
 
-        plt.subplot(3,2,6)
-        plt.plot(range(len(self.SD[sensorid])),self.SD[sensorid],label="right joint7 force")
+        plt.subplot(2,2,2)
+        plt.plot(range(len(self.SD["right_wrist_force"])),self.SD["right_wrist_force"][::-1],label="right joint7 force")
         plt.xlabel('Time (s)')
         plt.ylabel('Force (N)')
         plt.title('Right joint7 Force')
         plt.legend()
+        
+
+        plt.subplot(2,2,3)
+        plt.plot(range(len(self.SD["left_finger1_force"])),self.SD["left_finger1_force"][::-1],label="left finger1 force")
+        plt.plot(range(len(self.SD["left_finger2_force"])),self.SD["left_finger2_force"][::-1],label="left finger2 force")
+        plt.xlabel('Time (s)')
+        plt.ylabel('Force (N)')
+        plt.title('Left hand finger Force')
+        plt.legend()
+
+
+        plt.subplot(2,2,4)
+        plt.plot(range(len(self.SD["right_finger1_force"])),self.SD["right_finger1_force"][::-1],label="right finger1 force")
+        plt.plot(range(len(self.SD["right_finger2_force"])),self.SD["right_finger2_force"][::-1],label="right finger2 force")
+        plt.xlabel('Time (s)')
+        plt.ylabel('Force (N)')
+        plt.title('Right hand finger Force')
+        plt.legend()
 
         plt.tight_layout()
-        plt.savefig('Figures/Grasp_1/1/ft_sensor_data.png')
-
-
-
-        # # Plot for Object trajectory and orientation
-        # plt.figure(figsize=(12,6))
-        # plt.subplot(2,1,1)
-
-
         plt.show()

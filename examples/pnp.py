@@ -160,7 +160,6 @@ def main():
         mujoco.mj_step(model, data)
 
         jacP = controller.jac
-        controller.SD.append(data.sensordata)
 
         viewer.sync()
 
