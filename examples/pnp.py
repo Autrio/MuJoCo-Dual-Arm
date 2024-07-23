@@ -62,7 +62,7 @@ Kori = 4
 integration_dt = 0.1
 gravity_compensation = True
 dt = 0.002
-object_scale = 0.1
+# object_scale = 0.024724145342293464
 
 def run(controller,tolerance, graspIdx = 15):
     if(not tolerance):
@@ -77,10 +77,13 @@ def run(controller,tolerance, graspIdx = 15):
 
     stage = 1
 
-    grasps = np.load("examples/grasps/graspsChair.npy")
-    graspL = grasps[graspIdx][1]
-    graspR = grasps[graspIdx][0]
-    objStrPos = [0.0,0.3,0.22]
+    grasps = np.load("examples/grasps/GraspChair.npy")
+    graspL = grasps[graspIdx][0]
+    graspR = grasps[graspIdx][1]
+    objStrPos = [0.5,0.0,0.3]
+    objStrOri = [90,90,0]
+    object_scale = 0.5
+
     
     Util = RotationUtils()
 
@@ -98,16 +101,19 @@ def run(controller,tolerance, graspIdx = 15):
     init_pose_L = (list(data.mocap_pos[controller.mocap_idL]), list(data.mocap_quat[controller.mocap_idL]))
     # final_pose_L = ([-0.10, 0.33, 0.275],[0, 0, 1, 0])
     # final_pose_L = ([-0.12, 0.33, 0.4],[1, 0, 1, 0])
-    final_pose_L = Util.Tmat2pose(graspL,object_scale,objStrPos)
+    final_pose_L = Util.Tmat2pose(graspL,object_scale,objStrPos,objStrOri)
 
     init_pose_R = (list(data.mocap_pos[controller.mocap_idR]), list(data.mocap_quat[controller.mocap_idR]))
     # final_pose_R = ([0.03, 0.33, 0.17],[0, 1, 0, -1])
     # final_pose_R = ([0.03, 0.33, 0.275], [0, 1, 0, 0])
-    final_pose_R = Util.Tmat2pose(graspR,object_scale,objStrPos)
+    final_pose_R = Util.Tmat2pose(graspR,object_scale,objStrPos,objStrOri)
 
+    pre_grasp_pose_L = Util.GenPreGrasp(final_pose_L,0.22)
+    pre_grasp_pose_R = Util.GenPreGrasp(final_pose_R,0.22)
+90,90
     
-    pre_grasp_pose_L = ([-0.10, 0.33, 0.518],[0, 0, 1, 0]) 
-    pre_grasp_pose_R = ([0.03, 0.33, 0.518], [0, 1, 0, 0])
+    # pre_grasp_pose_L = ([-0.10, 0.33, 0.518],[0, 0, 1, 0]) 
+    # pre_grasp_pose_R = ([0.03, 0.33, 0.518], [0, 1, 0, 0])
 
     DtrajL_pre = create_quintic_trajectory(init_pose_L, pre_grasp_pose_L, 1500)
     DtrajR_pre = create_quintic_trajectory(init_pose_R, pre_grasp_pose_R, 1500)
@@ -142,8 +148,9 @@ def run(controller,tolerance, graspIdx = 15):
                 current_pose_L = (list(data.mocap_pos[controller.mocap_idL]), list(data.mocap_quat[controller.mocap_idL]))
                 current_pose_R = (list(data.mocap_pos[controller.mocap_idR]), list(data.mocap_quat[controller.mocap_idR]))
 
-                init_object_pose = ([0.0, 0.3,0.0], [0, 0, 0, 1])
-                final_object_pose = ([0, 0.3,0.3], [1,0, 0, 1])
+                # init_object_pose = ([0.5, 0.0,0.3], [1, 0, 0, 1])
+                init_object_pose = [list(data.body("collision_object").xpos.copy()),list(data.body("collision_object").xquat.copy())]
+                final_object_pose = ([0.5, 0,0.35], [1,0, 0, 1])
 
                 # Create a single trajectory for the object's center of mass
                 object_trajectory = create_quintic_trajectory(init_object_pose, final_object_pose, 1500)

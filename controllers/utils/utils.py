@@ -26,17 +26,33 @@ class RotationUtils:
         eefpose = np.concatenate((eefPos,eefQuat))
         return eefpose
     
-    def Tmat2pose(self,mat,scale,objStrPos):
+    def Tmat2pose(self,mat,scale,objStrPos,objStrOri):
         if(not mat.shape == (4,4)):
             raise ValueError("matrix must be of shape 4x4 ")
 
-        pos = (mat[:3,3:]).reshape(1,3)[0].tolist()
+        pos = (mat[:3,3:]*scale).reshape(1,3)[0]
         pos += objStrPos
         rot = mat[:3,:3]
+        rotTf = R.from_euler("xyz",(objStrOri[0],objStrOri[1],objStrOri[2]),degrees=True)
+        rotTform = rotTf.as_matrix()
+        rot = rot @ rotTform
         rot = R.from_matrix(rot)
         quat = rot.as_quat()
         tempQuat = quat[1:]
         tempQuat = np.append(tempQuat,quat[0])
 
-        return [pos,tempQuat.tolist()]
+        return [pos.tolist(),tempQuat.tolist()]
 
+    def GenPreGrasp(self,grasp,offset):
+        x, y, z = grasp[0]
+        qw ,qx ,qy ,qz = grasp[1]
+
+        rot = R.from_quat([qx,qy,qz,qw])
+        Rmat = rot.as_matrix()
+
+        graspAxis = Rmat[:,2]
+
+        offsetPos = np.array([x,y,z]) - offset*graspAxis
+
+        preGraspPose = [offsetPos.tolist(),[qw,qx,qy,qz]]
+        return preGraspPose
