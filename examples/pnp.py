@@ -4,6 +4,7 @@ import numpy as np
 import time
 import argparse as ap
 from scipy.spatial.transform import Rotation as R
+import logging 
 
 
 from controllers.Impedance import Impedance
@@ -24,6 +25,10 @@ parser.add_argument("-t","--tolerance",type=float,help="""Set trajectory followi
                     default 0.04 units
                     NOTE: Tendency to stall if tolerance is too low (lower than steady state error)""")
 
+parser.add_argument("-g","--graspIdx",type=int,help="""Select Grasp index as indexed by DA-2 Dataset
+                    default best grasp is at index 15
+                    NOTE: Not all grasps are feasible or ideal""")
+
 args = parser.parse_args()
 
 if(args.model == "bimanual"):
@@ -31,6 +36,14 @@ if(args.model == "bimanual"):
 else:
     model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/dual_panda.xml";
 
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    handlers=[
+                        logging.FileHandler("app.log"),
+                        logging.StreamHandler()
+                    ])
+
+logger = logging.getLogger("CONTROLLER")
 
 model = mujoco.MjModel.from_xml_path(model_path)
 data = mujoco.MjData(model)
@@ -64,9 +77,11 @@ gravity_compensation = True
 dt = 0.002
 # object_scale = 0.024724145342293464
 
-def run(controller,tolerance, graspIdx = 15):
+def run(controller,tolerance, graspIdx):
     if(not tolerance):
        tolerance = 0.04
+    if(not graspIdx):
+        graspIdx = 15
 
     erL = 1000
     erR = 1000
@@ -80,7 +95,7 @@ def run(controller,tolerance, graspIdx = 15):
     grasps = np.load("examples/grasps/GraspChair.npy")
     graspL = grasps[graspIdx][0]
     graspR = grasps[graspIdx][1]
-    objStrPos = [0.5,0.0,0.3]
+    objStrPos = [0.6,0.0,0.28]
     objStrOri = [90,90,0]
     object_scale = 0.5
 
@@ -110,7 +125,7 @@ def run(controller,tolerance, graspIdx = 15):
 
     pre_grasp_pose_L = Util.GenPreGrasp(final_pose_L,0.22)
     pre_grasp_pose_R = Util.GenPreGrasp(final_pose_R,0.22)
-90,90
+
     
     # pre_grasp_pose_L = ([-0.10, 0.33, 0.518],[0, 0, 1, 0]) 
     # pre_grasp_pose_R = ([0.03, 0.33, 0.518], [0, 1, 0, 0])
@@ -121,7 +136,7 @@ def run(controller,tolerance, graspIdx = 15):
     
     jacP = controller.jac
 
-
+    logger.info("INITIALISING TASK")
     while viewer.is_running():
         if(erL < tolerance and erR < tolerance and i <= 1500 and stage == 1):
             data.mocap_pos[controller.mocap_idL] = DtrajL_pre[i][:3]
@@ -131,6 +146,8 @@ def run(controller,tolerance, graspIdx = 15):
             i += 1
             if(i == 1500):
                 stage += 1
+                logger.info("Initialising Stage Change: PRE-GRASP----->GRASP")
+
                 current_pose_L = (list(data.mocap_pos[controller.mocap_idL]), list(data.mocap_quat[controller.mocap_idL]))
                 current_pose_R = (list(data.mocap_pos[controller.mocap_idR]), list(data.mocap_quat[controller.mocap_idR]))
 
@@ -145,12 +162,13 @@ def run(controller,tolerance, graspIdx = 15):
             j += 1
             if(j == 1500):
                 stage += 1
+                logger.info("Initialising Stage Change: GRASP----->ASCEND")
                 current_pose_L = (list(data.mocap_pos[controller.mocap_idL]), list(data.mocap_quat[controller.mocap_idL]))
                 current_pose_R = (list(data.mocap_pos[controller.mocap_idR]), list(data.mocap_quat[controller.mocap_idR]))
 
                 # init_object_pose = ([0.5, 0.0,0.3], [1, 0, 0, 1])
                 init_object_pose = [list(data.body("collision_object").xpos.copy()),list(data.body("collision_object").xquat.copy())]
-                final_object_pose = ([0.5, 0,0.35], [1,0, 0, 1])
+                final_object_pose = ([0.2,0.0,0.7], [1,0, 0, 1])
 
                 # Create a single trajectory for the object's center of mass
                 object_trajectory = create_quintic_trajectory(init_object_pose, final_object_pose, 1500)
@@ -166,6 +184,7 @@ def run(controller,tolerance, graspIdx = 15):
             k += 1
             if(k == 1500):
                 stage += 1
+                logger.info("TASK COMPLETE")
 
 
  
@@ -182,7 +201,7 @@ def run(controller,tolerance, graspIdx = 15):
             controller.gripperCtrl("close", "both")
         elif(stage == 4):
             controller.gripperCtrl("open", "both")
-            time.sleep(10)
+            time.sleep(3)
             viewer.close()
 
         mujoco.mj_step(model, data)
@@ -203,7 +222,7 @@ def main():
     
     controller.resetViewer(visFlag)
 
-    run(controller,args.tolerance)
+    run(controller,args.tolerance,args.graspIdx)
 
     # controller.makeplots()
 

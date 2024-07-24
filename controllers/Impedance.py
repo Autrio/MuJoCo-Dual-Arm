@@ -141,12 +141,12 @@ class Impedance:
         tempQuatL = self.error_quatL[1:]
         tempQuatL = np.append(tempQuatL,self.error_quatL[0])
         rotnErrL = R.from_quat(tempQuatL)
-        roL = rotnErrL.as_euler("xyz",degrees=False)
+        self.roL = rotnErrL.as_euler("xyz",degrees=False)
 
         tempQuatR = self.error_quatR[1:]
         tempQuatR = np.append(tempQuatR,self.error_quatR[0])
         rotnErrR = R.from_quat(tempQuatR)
-        roR = rotnErrL.as_euler("xyz",degrees=False)
+        self.roR = rotnErrR.as_euler("xyz",degrees=False)
 
         # Jacobian.
         mujoco.mj_jacSite(self.model, self.data, self.jacL[:3], self.jacL[3:], self.site_idL)    
@@ -179,8 +179,8 @@ class Impedance:
         # Compute generalized forces.
         self.tau = np.zeros(18)
 
-        self.tau[:9] = self.jac[:,:9].T @ (self.Kd * np.concatenate((self.dxL ,roL)) + self.Kp * self.twistL +  self.mu)
-        self.tau[9:18] = self.jac[:,9:18].T @ (self.Kd * np.concatenate((self.dxR ,roR)) + self.Kp * self.twistR +  self.mu)
+        self.tau[:9] = self.jac[:,:9].T @ (self.Kd * np.concatenate((self.dxL ,self.roL)) + self.Kp * self.twistL +  self.mu)
+        self.tau[9:18] = self.jac[:,9:18].T @ (self.Kd * np.concatenate((self.dxR ,self.roR)) + self.Kp * self.twistR +  self.mu)
 
         #compute postural constraints
         self.Jbar = self.M_inv @ self.jac.T @ self.Mx
@@ -264,8 +264,8 @@ class Impedance:
 
         
     def Datacap(self):
-        self.erL = np.linalg.norm(self.dxL)
-        self.erR = np.linalg.norm(self.dxR)
+        self.erL = np.linalg.norm(np.append(self.dxL,self.roL))
+        self.erR = np.linalg.norm(np.append(self.dxR,self.roR))
         self.time_steps.append(len(self.time_steps) * self.dt)
         self.dxL_xlist.append(self.dxL[0])
         self.dxL_ylist.append(self.dxL[1])
@@ -378,7 +378,6 @@ class Impedance:
         plt.legend()
 
         plt.tight_layout()
-        plt.show()
 
         # Plot for errors in Cartesian space for both arms --------------------------------------------------------
         plt.figure(figsize=(12, 6))
@@ -451,7 +450,6 @@ class Impedance:
         plt.legend()
                
         plt.tight_layout()
-        plt.show()
 
         # Plot for joint trajectories -----------------------------------------------------------------------------
         plt.figure(figsize=(12, 6))
@@ -487,7 +485,6 @@ class Impedance:
         plt.legend()
 
         plt.tight_layout()
-        plt.show()
 
         #plot for object trajectories ----------------------------------------------------------------------
         plt.figure(figsize=(12,6))
