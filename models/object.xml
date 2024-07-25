@@ -36,6 +36,6 @@
         <geom class="object_col" mesh="chairPart-31" />
         <geom class="object_col" mesh="chairPart-32" />
         <geom class="object_col" mesh="chairPart-33" />
-        <inertial pos="0 0 0" mass="1" diaginertia="2 2 2" />
+        <inertial pos="0 0 0" mass="5" diaginertia="2 2 2" />
     </body>
 </mujocoinclude>

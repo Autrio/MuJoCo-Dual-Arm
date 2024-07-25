@@ -1,11 +1,11 @@
 <mujocoinclude>
     <actuator>
-        <motor class="panda" name="left_panda_joint1" joint="left_panda_joint1"  forcerange="-8700 8700" ctrlrange="-3000 3000"/>
-        <motor class="panda" name="left_panda_joint2" joint="left_panda_joint2"  forcerange="-8700 8700" ctrlrange="-3000 3000"/>
-        <motor class="panda" name="left_panda_joint3" joint="left_panda_joint3"  forcerange="-870 870"   ctrlrange="-3000 3000"/>
-        <motor class="panda" name="left_panda_joint4" joint="left_panda_joint4"  forcerange="-870 870"   ctrlrange="-3000 3000"/>
-        <motor class="panda" name="left_panda_joint5" joint="left_panda_joint5"  forcerange="-120 120"   ctrlrange="-3000 3000"/>
-        <motor class="panda" name="left_panda_joint6" joint="left_panda_joint6"  forcerange="-120 120"   ctrlrange="-3000 3000"/>
-        <motor class="panda" name="left_panda_joint7" joint="left_panda_joint7"  forcerange="-120 120"   ctrlrange="-3000 3000"/>
+        <motor class="panda" name="left_panda_joint1" joint="left_panda_joint1"  forcerange="-87 87" ctrlrange="-1000 1000"/>
+        <motor class="panda" name="left_panda_joint2" joint="left_panda_joint2"  forcerange="-87 87" ctrlrange="-1000 1000"/>
+        <motor class="panda" name="left_panda_joint3" joint="left_panda_joint3"  forcerange="-87 87"   ctrlrange="-1000 1000"/>
+        <motor class="panda" name="left_panda_joint4" joint="left_panda_joint4"  forcerange="-87 87"   ctrlrange="-1000 1000"/>
+        <motor class="panda" name="left_panda_joint5" joint="left_panda_joint5"  forcerange="-12 12"   ctrlrange="-1000 1000"/>
+        <motor class="panda" name="left_panda_joint6" joint="left_panda_joint6"  forcerange="-12 12"   ctrlrange="-1000 1000"/>
+        <motor class="panda" name="left_panda_joint7" joint="left_panda_joint7"  forcerange="-12 12"   ctrlrange="-1000 1000"/>
     </actuator>
 </mujocoinclude>
