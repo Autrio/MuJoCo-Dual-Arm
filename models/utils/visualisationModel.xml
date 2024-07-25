@@ -1,0 +1,58 @@
+<mujoco model="dual-panda v01">
+
+        <asset>
+            <texture name="texplane" type="2d" builtin="checker" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2"
+                    width="512" height="512"/>
+            <material name="MatGnd" reflectance="0.5" texture="texplane" texrepeat="1 1" texuniform="true"/>
+        </asset>
+    
+        <worldbody>
+            <light directional="false" diffuse=".8 .8 .8" specular="0.3 0.3 0.3" pos="1  1 3" dir="-1 -1 -3"/>
+            <light directional="false" diffuse=".8 .8 .8" specular="0.3 0.3 0.3" pos="1 -1 3" dir="-1 1 -3"/>
+            <light directional="false" diffuse=".8 .8 .8" specular="0.3 0.3 0.3" pos="-1 0 3" dir="1 0 -3" />
+            <geom name="ground" pos="0 0 0" size="5 5 10" material="MatGnd" type="plane" contype="1" conaffinity="1"/>
+        </worldbody>
+        <keyframe>
+            <!-- <key name="home" qpos="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.15 0.3 0 0 0 0 0" ctrl="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/> -->
+            <!-- <key name="home" qpos=" 0.4 0.0 0.22 1 0 0 1" ctrl="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/> -->
+            <key name="home" qpos="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.0 0.0 0.32 1 0 0 -1"/>
+        </keyframe>
+
+    <include file="../panda/assets/assets.xml" />
+    <include file="../panda/assets/gripper_assets.xml" />
+
+    <!-- change this for different objects -->
+
+    <include file="../panda/assets/chair.xml"/>
+    <!-- <include file="panda/assets/monitor.xml"/> -->
+
+    <compiler meshdir="" />
+    <option noslip_iterations="20"> </option>
+    <!-- <option condim="6"> </option> -->
+    <option cone="elliptic"> </option>
+    <option><flag multiccd="enable"/> </option>
+
+    <worldbody>
+        <body name="targetL" mocap="true">
+            <geom type="box" size=".05 .05 .05" contype="0" conaffinity="0" rgba=".6 .3 .3 .5"/>
+            <site name="mocapL" type="sphere" size="0.01" rgba="0 0 1 1" group="1"/>
+        </body>
+        <!-- <body name="targetR" pos=" 0.30702 0.75 0.59027" quat="0.923956 -0.382499 1.32493e-12 3.20041e-12" mocap="true"> -->
+        <body name="targetR" mocap="true">
+            <geom type="box" size=".05 .05 .05" contype="0" conaffinity="0" rgba=".6 .3 .3 .5"/>
+            <site name="mocapR" type="sphere" size="0.01" rgba="0 0 1 1" group="1"/>
+        </body>
+        <body name="free_gripper_L" pos="-0.2 0.3 0.2" quat="1 0 0 0">
+        <joint type="free" name="L_virtual_joint" pos="0.0 1.0 0.0" damping="5" />
+            <include file="../panda/assets/gripperL.xml"/>
+            <site name='end_effector' pos='0 0 .210' size='0.01' euler='0 0 -0.785398'/>
+        </body>
+        <body name="free_gripper_R" pos="0.2 0.3 0.2" quat="1 0 0 0">
+        <joint type="free" name="R_virtual_joint" pos="0.0 1.0 0.0" damping="5" />
+            <include file="../panda/assets/gripperR.xml"/>
+            <site name='end_effector1' pos='0 0 .210' size='0.01' euler='0 0 -0.785398'/>
+        </body>
+        <include file="../object.xml"/>
+    </worldbody>
+</mujoco>
+    

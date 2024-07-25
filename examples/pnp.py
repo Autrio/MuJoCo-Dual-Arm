@@ -95,8 +95,8 @@ def run(controller,tolerance, graspIdx):
     grasps = np.load("examples/grasps/GraspChair.npy")
     graspL = grasps[graspIdx][0]
     graspR = grasps[graspIdx][1]
-    objStrPos = [0.6,0.0,0.28]
-    objStrOri = [90,90,0]
+    objStrPos = [0.7,0.0,0.28]
+    objStrOri = [-90,-90,0]
     object_scale = 0.5
 
     
@@ -168,7 +168,7 @@ def run(controller,tolerance, graspIdx):
 
                 # init_object_pose = ([0.5, 0.0,0.3], [1, 0, 0, 1])
                 init_object_pose = [list(data.body("collision_object").xpos.copy()),list(data.body("collision_object").xquat.copy())]
-                final_object_pose = ([0.2,0.0,0.7], [1,0, 0, 1])
+                final_object_pose = ([0.4,0.0,0.7], [1,0, 0, -1])
 
                 # Create a single trajectory for the object's center of mass
                 object_trajectory = create_quintic_trajectory(init_object_pose, final_object_pose, 1500)

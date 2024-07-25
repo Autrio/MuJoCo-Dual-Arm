@@ -1,3 +1,4 @@
+
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 import mujoco
@@ -36,12 +37,10 @@ class RotationUtils:
         rotTf = R.from_euler("xyz",(objStrOri[0],objStrOri[1],objStrOri[2]),degrees=True)
         rotTform = rotTf.as_matrix()
         rot = rot @ rotTform
-        rot = R.from_matrix(rot)
-        quat = rot.as_quat()
-        tempQuat = quat[1:]
-        tempQuat = np.append(tempQuat,quat[0])
+        quat = np.zeros(4)
+        mujoco.mju_mat2Quat(quat,rot.flatten())
 
-        return [pos.tolist(),tempQuat.tolist()]
+        return [pos.tolist(),quat.tolist()]
 
     def GenPreGrasp(self,grasp,offset):
         x, y, z = grasp[0]

@@ -16,4 +16,4 @@
             <geom quat="0 0 0 1" class="panda_col" mesh="finger_col" mass="0.01"/>
         </body>
     </body>
-    </mujoco>
+</mujoco>

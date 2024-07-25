@@ -6,6 +6,11 @@ import xml.etree.ElementTree as ET
 mesh_file = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/panda/meshes/collision/objects/chair.stl"
 
 mesh = trimesh.load(mesh_file,force="mesh")
+#do mean center
+mesh.vertices -= mesh.center_mass
+
+mesh.export(mesh_file.strip(".stl")+"_mean_centered.stl")
+
 mesh = coacd.Mesh(mesh.vertices,mesh.faces)
 parts = coacd.run_coacd(mesh)
 scale = "1.3 1.3 1.3"
@@ -28,7 +33,7 @@ for i,part in enumerate(parts):
 
 XAssetTree = ET.ElementTree(Xmjinc)
 
-with open("/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/panda/assets/chair.xml", "wb") as f:
+with open("/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/panda/assets/chair_mean_centered.xml", "wb") as f:
     XAssetTree.write(f, encoding="utf-8")
 
 print("asset XML file created successfully.")

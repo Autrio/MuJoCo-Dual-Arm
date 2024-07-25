@@ -1,6 +1,6 @@
 <mujocoinclude>
     <asset>
-        <mesh name="chair_viz" file="../meshes/visual/objects/chair_mean_centered.stl" scale="1.3 1.3 1.3" />
+        <mesh name="chair_visz" file="../meshes/visual/objects/chair_mean_centered.stl" scale="1.3 1.3 1.3" />
         <mesh name="chairPart-0" file="../meshes/collision/objects/decompositions/chairPart-0.stl"
             scale="1.3 1.3 1.3" />
         <mesh name="chairPart-1" file="../meshes/collision/objects/decompositions/chairPart-1.stl"
