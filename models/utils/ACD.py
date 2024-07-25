@@ -9,7 +9,6 @@ mesh = trimesh.load(mesh_file,force="mesh")
 #do mean center
 mesh.vertices -= mesh.center_mass
 
-mesh.export(mesh_file.strip(".stl")+"_mean_centered.stl")
 
 mesh = coacd.Mesh(mesh.vertices,mesh.faces)
 parts = coacd.run_coacd(mesh)
@@ -20,7 +19,7 @@ numParts = 0
 
 Xmjinc = ET.Element("mujocoinclude")
 Xasset = ET.SubElement(Xmjinc,"asset")
-XcolM = ET.SubElement(Xasset,"mesh",attrib={"name":"chair_visz","file":"../meshes/visual/objects/chair.stl","scale":scale})
+XcolM = ET.SubElement(Xasset,"mesh",attrib={"name":"chair_viz","file":"../meshes/visual/objects/chair.stl","scale":scale})
 
 for i,part in enumerate(parts):
     Pmesh = trimesh.Trimesh(part[0],part[1])
@@ -33,7 +32,7 @@ for i,part in enumerate(parts):
 
 XAssetTree = ET.ElementTree(Xmjinc)
 
-with open("/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/panda/assets/chair_mean_centered.xml", "wb") as f:
+with open("/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/panda/assets/chair.xml", "wb") as f:
     XAssetTree.write(f, encoding="utf-8")
 
 print("asset XML file created successfully.")
