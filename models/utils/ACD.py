@@ -3,16 +3,21 @@ import coacd
 import trimesh
 import xml.etree.ElementTree as ET
 
-mesh_file = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/panda/meshes/collision/objects/chair.stl"
+mesh_file = '/home/autrio/college-linx/RRC/experimental/da2-grasps/simplified1/1e2b3f2047c62de9594de057c402974e.obj'
 
 mesh = trimesh.load(mesh_file,force="mesh")
 #do mean center
-mesh.vertices -= mesh.center_mass
+scaleObj = 0.024724145342293464
+mesh.vertices -= mesh.centroid
+mesh.apply_scale(scaleObj)
+
+mesh.export("/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/panda/meshes/collision/objects/chair.stl")
+mesh.export("/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/panda/meshes/visual/objects/chair.stl")
 
 
 mesh = coacd.Mesh(mesh.vertices,mesh.faces)
 parts = coacd.run_coacd(mesh)
-scale = "1.3 1.3 1.3"
+scale = "0.6 0.6 0.6"
 
 name = "chair"
 numParts = 0
@@ -38,8 +43,8 @@ with open("/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/panda/assets/cha
 print("asset XML file created successfully.")
 
 Xobj = ET.Element("mujocoinclude")
-Xbody = ET.SubElement(Xobj,"body",attrib={"name":"collision_object","pos":"0.0 0.3 0.2","quat":"0 0 0 1"})
-Xjoint = ET.SubElement(Xbody,"joint",attrib={"type":"free","name":"object_virtual_joint","pos":"0.0 1.0 0.0","damping":"5"})
+Xbody = ET.SubElement(Xobj,"body",attrib={"name":"collision_object","pos":"0.0 0.3 0.2","quat":"1 0 0 0"})
+Xjoint = ET.SubElement(Xbody,"joint",attrib={"type":"free","name":"object_virtual_joint","pos":"0.0 0.0 0.0","damping":"5"})
 XvisG = ET.SubElement(Xbody,"geom",attrib={"class":"object_viz","mesh":"chair_viz"})
 
 for i in range(numParts):

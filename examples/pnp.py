@@ -95,9 +95,9 @@ def run(controller,tolerance, graspIdx):
     grasps = np.load("examples/grasps/GraspChair.npy")
     graspL = grasps[graspIdx][0]
     graspR = grasps[graspIdx][1]
-    objStrPos = [0,0.0,0.28]
+    objStrPos = [-0.4,0.0,0.28]
     objStrOri = [0,0,0]
-    object_scale = 1
+    object_scale = 0.6
 
     
     Util = RotationUtils()
