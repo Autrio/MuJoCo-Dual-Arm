@@ -49,7 +49,7 @@ graspL = grasps[graspIdx][0]
 graspR = grasps[graspIdx][1]
 object_scale = -10
 # object_scale = 0.024724145342293464
-objStrPos = [-0.067500/2-0.02*object_scale,0.0,0.32]
+objStrPos = [0.2,0.0,0.32]
 objStrOri = [-90,0,0]
 
 

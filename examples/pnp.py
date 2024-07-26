@@ -65,8 +65,8 @@ else:
     pass
 
 
-Ipos = np.asarray([1000.0, 1000.0, 1000.0])  # [N/m]
-Iori = np.asarray([100.0, 100.0, 100.0])  # [Nm/rad]
+Ipos = np.asarray([800.0, 800.0, 800.0])  # [N/m]
+Iori = np.asarray([80.0, 80.0, 80.0])  # [Nm/rad]
 Kp_null = np.asarray([100.0, 100.0, 55.0, 55.0, 22.5, 20.0, 5.0, 2.0, 2.0,
                       100.0, 100.0, 55.0, 55.0, 22.5, 20.0, 5.0, 2.0, 2.0])
 D = 1.3
@@ -95,9 +95,9 @@ def run(controller,tolerance, graspIdx):
     grasps = np.load("examples/grasps/GraspChair.npy")
     graspL = grasps[graspIdx][0]
     graspR = grasps[graspIdx][1]
-    objStrPos = [0.7,0.0,0.28]
-    objStrOri = [-90,-90,0]
-    object_scale = 0.5
+    objStrPos = [0,0.0,0.28]
+    objStrOri = [0,0,0]
+    object_scale = 1
 
     
     Util = RotationUtils()
@@ -122,6 +122,10 @@ def run(controller,tolerance, graspIdx):
     # final_pose_R = ([0.03, 0.33, 0.17],[0, 1, 0, -1])
     # final_pose_R = ([0.03, 0.33, 0.275], [0, 1, 0, 0])
     final_pose_R = Util.Tmat2pose(graspR,object_scale,objStrPos,objStrOri)
+
+    # print(final_pose_L)
+    # print(final_pose_R)
+    # exit()
 
     pre_grasp_pose_L = Util.GenPreGrasp(final_pose_L,0.22)
     pre_grasp_pose_R = Util.GenPreGrasp(final_pose_R,0.22)
@@ -169,7 +173,7 @@ def run(controller,tolerance, graspIdx):
                 # init_object_pose = ([0.5, 0.0,0.3], [1, 0, 0, 1])
                 init_object_pose = [list(data.body("collision_object").xpos.copy()),list(data.body("collision_object").xquat.copy())]
                 final_object_pose = ([0.4,0.0,0.7], [1,0, 0, -1])
-
+                
                 # Create a single trajectory for the object's center of mass
                 object_trajectory = create_quintic_trajectory(init_object_pose, final_object_pose, 1500)
                 AtrajL, AtrajR = generate_end_effector_trajectories(object_trajectory, init_object_pose, current_pose_L, current_pose_R)

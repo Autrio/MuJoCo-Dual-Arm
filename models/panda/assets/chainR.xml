@@ -41,7 +41,7 @@
                                     <geom class="panda_viz" mesh="link7_viz" rgba=".8 .8 .82 1"/>
                                     <geom class="panda_grey_viz" mesh="link7_dark_viz" pos="0 0 -.0008"/>
                                     <geom class="panda_col" mesh="link7_col"/>
-                                    <site name='end_effector1' pos='0 0 .210' size='0.01' euler='0 0 0'/>
+                                    <site name='end_effector1' pos='0 0 .210' size='0.01' euler='1.57 0 0'/>
 
                                     <!-- End Effector -->
                                     <body name="right_panda_gripper">

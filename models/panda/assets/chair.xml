@@ -1,73 +1,73 @@
 <mujocoinclude>
     <asset>
-        <mesh name="chair_viz" file="../meshes/visual/objects/chair.stl" scale="1.3 1.3 1.3" />
+        <mesh name="chair_viz" file="../meshes/visual/objects/chairOk.stl" scale="1 1 1" />
         <mesh name="chairPart-0" file="../meshes/collision/objects/decompositions/chairPart-0.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-1" file="../meshes/collision/objects/decompositions/chairPart-1.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-2" file="../meshes/collision/objects/decompositions/chairPart-2.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-3" file="../meshes/collision/objects/decompositions/chairPart-3.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-4" file="../meshes/collision/objects/decompositions/chairPart-4.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-5" file="../meshes/collision/objects/decompositions/chairPart-5.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-6" file="../meshes/collision/objects/decompositions/chairPart-6.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-7" file="../meshes/collision/objects/decompositions/chairPart-7.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-8" file="../meshes/collision/objects/decompositions/chairPart-8.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-9" file="../meshes/collision/objects/decompositions/chairPart-9.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-10" file="../meshes/collision/objects/decompositions/chairPart-10.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-11" file="../meshes/collision/objects/decompositions/chairPart-11.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-12" file="../meshes/collision/objects/decompositions/chairPart-12.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-13" file="../meshes/collision/objects/decompositions/chairPart-13.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-14" file="../meshes/collision/objects/decompositions/chairPart-14.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-15" file="../meshes/collision/objects/decompositions/chairPart-15.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-16" file="../meshes/collision/objects/decompositions/chairPart-16.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-17" file="../meshes/collision/objects/decompositions/chairPart-17.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-18" file="../meshes/collision/objects/decompositions/chairPart-18.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-19" file="../meshes/collision/objects/decompositions/chairPart-19.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-20" file="../meshes/collision/objects/decompositions/chairPart-20.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-21" file="../meshes/collision/objects/decompositions/chairPart-21.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-22" file="../meshes/collision/objects/decompositions/chairPart-22.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-23" file="../meshes/collision/objects/decompositions/chairPart-23.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-24" file="../meshes/collision/objects/decompositions/chairPart-24.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-25" file="../meshes/collision/objects/decompositions/chairPart-25.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-26" file="../meshes/collision/objects/decompositions/chairPart-26.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-27" file="../meshes/collision/objects/decompositions/chairPart-27.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-28" file="../meshes/collision/objects/decompositions/chairPart-28.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-29" file="../meshes/collision/objects/decompositions/chairPart-29.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-30" file="../meshes/collision/objects/decompositions/chairPart-30.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-31" file="../meshes/collision/objects/decompositions/chairPart-31.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-32" file="../meshes/collision/objects/decompositions/chairPart-32.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
         <mesh name="chairPart-33" file="../meshes/collision/objects/decompositions/chairPart-33.stl"
-            scale="1.3 1.3 1.3" />
+            scale="1 1 1" />
     </asset>
 </mujocoinclude>

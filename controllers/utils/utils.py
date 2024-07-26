@@ -49,7 +49,7 @@ class RotationUtils:
         rot = R.from_quat([qx,qy,qz,qw])
         Rmat = rot.as_matrix()
 
-        graspAxis = Rmat[:,2]
+        graspAxis = Rmat[:,1]
 
         offsetPos = np.array([x,y,z]) - offset*graspAxis
 
