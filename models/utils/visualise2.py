@@ -12,45 +12,20 @@ import sys
 from icecream import ic
 
 
-model_path = '/home/faizal/Documents/MuJoCo-Dual-Arm/models/utils/visualisationModel2.xml'
-model = mujoco.MjModel.from_xml_path(model_path)
-data = mujoco.MjData(model)
-viewer = mujoco.viewer.launch_passive(
-    model=model,
-    data=data,
-    show_left_ui=False,
-    show_right_ui=False)
+# model_path = '/home/faizal/Documents/MuJoCo-Dual-Arm/models/utils/visualisationModel2.xml'
+# model = mujoco.MjModel.from_xml_path(model_path)
+# data = mujoco.MjData(model)
+# viewer = mujoco.viewer.launch_passive(
+#     model=model,
+#     data=data,
+#     show_left_ui=False,
+#     show_right_ui=False)
 
-key_id = model.key("home").id
-
-mujoco.mj_resetDataKeyframe(model, data, key_id)
-
-poses = {
-    'obj': np.array([0.0, 0, 0.4702, 1, 0, 0, 0]),
-    'gripper1': np.array([-0.260219, -0.31412306, -0.00207647 + 0.4702,  -0.04182083, -0.11566474, 0.99239555, -0.00487426]),
-    'gripper2': np.array([-0.192234, 0.24225822, -0.04119218 + 0.4702,  -0.371428, 0.64430924, -0.29131702, -0.60169863])
-}
-
-model.key("home").qpos[:7] = poses['obj']
-model.key("home").qpos[7:14] = poses['gripper1']
-model.key('home').qpos[14:] = poses['gripper2']
-
-
-while(viewer.is_running()):    
-    print(model.key("home").qpos)
-    mujoco.mj_resetDataKeyframe(model, data, key_id)
-    model.key("home").qpos[:7] = poses['obj']
-    model.key("home").qpos[7:14] = poses['gripper1']
-    model.key('home').qpos[14:] = poses['gripper2']
-
-    mujoco.mj_forward(model, data)
-    mujoco.mj_step(model, data)
-    viewer.sync()
-
+# while(viewer.is_running()):
     
-    
-    
-# ==========================================================================================
+
+
+# ---------------------------------------------------------------------------------------------
 
 parser = ap.ArgumentParser(prog="visualise", description="visualise grasps made by DA-2")
 
@@ -93,7 +68,7 @@ graspR = grasps[graspIdx][1]
 # ic(graspL.shape)
 graspL = np.eye(4)
 graspR = np.eye(4)
-graspR[:3, 3] = np.array([0, 0, 0.0])
+graspR[:3, 3] = np.array([0, 0, 0])
 # object_scale = -10
 # object_scale = 0.024724145342293464
 # objStrPos = [-0.067500/2-0.02*object_scale,0.0,0.32]
@@ -130,7 +105,7 @@ mcR = model.body("targetR").mocapid[0]
 
 while(viewer.is_running()):
     model.key("home").qpos[:18] = keyFrameQpos
-    mujoco.mj_resetDataKeyframe(model, data, key_id)
+    # mujoco.mj_resetDataKeyframe(model, data, key_id)
     data.mocap_pos[mcL] = final_pose_L[0]
     data.mocap_quat[mcL] = final_pose_L[1]
     data.mocap_pos[mcR] = final_pose_R[0]

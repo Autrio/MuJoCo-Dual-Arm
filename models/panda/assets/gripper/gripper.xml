@@ -1,0 +1,28 @@
+<!-- <mujoco model="gripper">
+  <default>
+    <default class="visual">
+      <geom group="2" type="mesh" contype="0" conaffinity="0"/>
+    </default>
+    <default class="collision">
+      <geom group="3" type="mesh"/>
+    </default>
+  </default>
+  <asset>
+    <mesh file="gripper.obj"/>
+  </asset>
+  <worldbody>
+    <body name="gripper">
+      <geom mesh="gripper" class="visual"/>
+      <geom mesh="gripper" class="collision"/>
+    </body>
+  </worldbody>
+</mujoco> -->
+
+<mujocoinclude>
+    <body name="gripper_body" pos="0 0 0" euler="0 0 0">
+        <geom class="object_viz" mesh="gripper_viz" />
+        <geom class="object_col" mesh="gripper_viz" />
+        <inertial pos="0 0 0" euler="0 0 0" mass="0.38" diaginertia="0.1 0.1 0.1" />
+    </body>
+
+</mujocoinclude>

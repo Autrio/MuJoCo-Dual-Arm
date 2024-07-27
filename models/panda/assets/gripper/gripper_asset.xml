@@ -1,0 +1,5 @@
+<mujocoinclude>
+    <asset>
+        <mesh name="gripper_viz" file="/home/faizal/Documents/MuJoCo-Dual-Arm/models/panda/assets/gripper/gripper.stl" scale="1 1 1" />
+    </asset>
+</mujocoinclude>

@@ -32,9 +32,9 @@ parser.add_argument("-g","--graspIdx",type=int,help="""Select Grasp index as ind
 args = parser.parse_args()
 
 if(args.model == "bimanual"):
-    model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/bimanual_panda.xml";
+    model_path = "/home/faizal/Documents/MuJoCo-Dual-Arm/models/bimanual_panda.xml";
 else:
-    model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/dual_panda.xml";
+    model_path = "/home/faizal/Documents/MuJoCo-Dual-Arm/models/dual_panda.xml";
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -53,7 +53,7 @@ viewer = mujoco.viewer.launch_passive(
     show_left_ui=False,
     show_right_ui=False)
 
-visFlag = 1
+visFlag = 0
 
 if(args.toggle_mocap == "False"):
     model.geom(model.body("targetL").geomadr).rgba = [0.0, 0.0, 0.0, 0.0]
@@ -72,6 +72,7 @@ Kp_null = np.asarray([100.0, 100.0, 55.0, 55.0, 22.5, 20.0, 5.0, 2.0, 2.0,
 D = 1.3
 Kpos = 6
 Kori = 4
+
 integration_dt = 0.1
 gravity_compensation = True
 dt = 0.002
@@ -79,7 +80,7 @@ dt = 0.002
 
 def run(controller,tolerance, graspIdx):
     if(not tolerance):
-       tolerance = 0.04
+       tolerance = 0.4
     if(not graspIdx):
         graspIdx = 15
 
@@ -97,7 +98,10 @@ def run(controller,tolerance, graspIdx):
     graspR = grasps[graspIdx][1]
     objStrPos = [0.7,0.0,0.28]
     objStrOri = [-90,-90,0]
-    object_scale = 0.5
+    # object_scale = 0.5
+    # objStrPos = [0,0,0]
+    # objStrOri = [0,0,0]
+    object_scale = 1
 
     
     Util = RotationUtils()

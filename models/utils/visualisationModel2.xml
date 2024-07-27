@@ -15,20 +15,41 @@
         <keyframe>
             <!-- <key name="home" qpos="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.15 0.3 0 0 0 0 0" ctrl="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/> -->
             <!-- <key name="home" qpos=" 0.4 0.0 0.22 1 0 0 1" ctrl="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/> -->
-            <key name="home" qpos="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.0 0.0 0.32 1 0 0 -1"/>
+            <key name="home" qpos="0.5 0 0.5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/>
         </keyframe>
 
     <include file="../panda/assets/assets.xml" />
-    <include file="../panda/assets/gripper_assets.xml" />
+    <include file="../panda/assets/chair.xml" />
+    <include file="../panda/assets/gripper/gripper_asset.xml" />
+    <!-- <include file="../panda/assets/gripper_assets.xml" /> -->
+    <!-- <include file="../panda/assets/gripper/gripper.xml"/> -->
+    
+    <worldbody>            
+            <include file="../object.xml"/>
+            <body name="gripper2" pos="0 0 0" quat="1 0 0 0">
+                <joint type="free" name="gripper_left_joint" pos="0 0 0" damping="5" />
+                <geom class="object_viz" mesh="gripper_viz"/>
+                <inertial pos="0 0 0" euler="0 0 0" mass="0.38" diaginertia="0.1 0.1 0.1" />
+                <!-- <include file="../panda/assets/gripper/gripper.xml"/> -->
+                <!-- <inertial pos="0 0 0" mass="5" diaginertia="2 2 2" /> -->
+            </body>
 
-    <!-- change this for different objects -->
+            <body pos="0 0 0" quat="1 0 0 0">
+                <joint type="free" name="gripper_right_joint" pos="0 0 0" damping="5" />
+                <geom class="object_viz" mesh="gripper_viz"/>
+                <inertial pos="0 0 0" euler="0 0 0" mass="0.38" diaginertia="0.1 0.1 0.1" />
+                <!-- <include file="../panda/assets/gripper/gripper.xml"/> -->
+                <!-- <inertial pos="0 0 0" mass="5" diaginertia="2 2 2" /> -->
+            </body>
+            
+        <!-- <include file=".." -->
+    </worldbody>
+    
+    <!--- 
 
-    <!-- <include file="../panda/assets/chair.xml"/> -->
-    <include file="../panda/assets/monitor.xml"/>
-
+    
     <compiler meshdir="" />
     <option noslip_iterations="20"> </option>
-    <!-- <option condim="6"> </option> -->
     <option cone="elliptic"> </option>
     <option><flag multiccd="enable"/> </option>
 
@@ -37,22 +58,22 @@
             <geom type="box" size=".05 .05 .05" contype="0" conaffinity="0" rgba=".6 .3 .3 .5"/>
             <site name="mocapL" type="sphere" size="0.01" rgba="0 0 1 1" group="1"/>
         </body>
-        <!-- <body name="targetR" pos=" 0.30702 0.75 0.59027" quat="0.923956 -0.382499 1.32493e-12 3.20041e-12" mocap="true"> -->
         <body name="targetR" mocap="true">
-            <geom type="box" size=".05 .05 .05" contype="0" conaffinity="0" rgba=".6 .3 .3 .5"/>
+            <geom type="box" size=".01 .01 .01" pos="0 0 1" contype="0" conaffinity="0" rgba=".6 .3 .3 .5"/>
             <site name="mocapR" type="sphere" size="0.01" rgba="0 0 1 1" group="1"/>
         </body>
         <body name="free_gripper_L" pos="-0.2 0.3 0.2" quat="1 0 0 0">
         <joint type="free" name="L_virtual_joint" pos="0.0 1.0 0.0" damping="5" />
             <include file="../panda/assets/gripperL.xml"/>
-            <site name='end_effector' pos='0 0 .210' size='0.01' euler='0 0 0'/>
+            <site name='end_effector' pos='0 0 .210' size='0.01' euler='0 0 -0.785398'/>
         </body>
         <body name="free_gripper_R" pos="0.2 0.3 0.2" quat="1 0 0 0">
         <joint type="free" name="R_virtual_joint" pos="0.0 1.0 0.0" damping="5" />
             <include file="../panda/assets/gripperR.xml"/>
-            <site name='end_effector1' pos='0 0 .210' size='0.01' euler='0 0 0'/>
+            <site name='end_effector1' pos='0 0 .210' size='0.01' euler='0 0 -0.785398'/>
         </body>
         <include file="../object.xml"/>
-    </worldbody>
+    </worldbody> -->
+
 </mujoco>
     
