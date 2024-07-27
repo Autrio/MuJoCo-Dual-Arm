@@ -1,0 +1,8 @@
+parameters:
+  name: "table"
+  ACD:
+    Mujoco_scale: 1
+  pnp:
+    tolerance: 0.4
+    visual: True
+    grasp_idx: 500

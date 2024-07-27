@@ -29,7 +29,15 @@ parser.add_argument("-g","--graspIdx",type=int,help="""Select Grasp index as ind
                     default best grasp is at index 15
                     NOTE: Not all grasps are feasible or ideal""")
 
+parser.add_argument("-o","--object",type=str,required=True)
+
+parser.add_argument("-ms","--MujocoScale",type=float,default=1.0)
+
+
 args = parser.parse_args()
+
+name = args.object
+
 
 if(args.model == "bimanual"):
     model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/bimanual_panda.xml";
@@ -92,12 +100,12 @@ def run(controller,tolerance, graspIdx):
 
     stage = 1
 
-    grasps = np.load("examples/grasps/GraspChair.npy")
+    grasps = np.load("examples/generatedGrasps/grasp-{}.npy".format(name))
     graspL = grasps[graspIdx][0]
     graspR = grasps[graspIdx][1]
     objStrPos = [-0.4,0.0,0.28]
     objStrOri = [0,0,0]
-    object_scale = 0.6
+    object_scale = args.MujocoScale
 
     
     Util = RotationUtils()
