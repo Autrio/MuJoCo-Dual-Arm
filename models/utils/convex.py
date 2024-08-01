@@ -63,8 +63,8 @@ def convex_optimization(model, data, x_ref, xd_ref, xd, xdd_ref, fext, D, K, J, 
     x_pos = data.site('tip').xpos
 
     end_effector_quat = data.xquat[model.body('hand').id]
-    x_ori = Quat2rot(end_effector_quat, "wxyz", "xyz", True)
-    x = np.concatenate((x_pos, x_ori))
+    # x_ori = Quat2rot(end_effector_quat, "wxyz", "xyz", True)
+    x = np.concatenate((x_pos, end_effector_quat))
     error_x = x_ref - x
     error_xd = xd_ref - xd
     x_dd = xdd_ref + Mx_inv @ (D @ error_xd + K @ error_x - fext)
@@ -94,66 +94,12 @@ def convex_optimization(model, data, x_ref, xd_ref, xd, xdd_ref, fext, D, K, J, 
     ic(problem.is_dcp())
 
     problem.solve()
-
-    ic(q_dd.value)
-
     return q_dd.value
 
 
-model_path = '/home/faizal/Documents/MuJoCo-Dual-Arm/models/utils/franka_emika_panda/panda.xml'
-
-model = mujoco.MjModel.from_xml_path(model_path)
-data = mujoco.MjData(model)
-viewer = mujoco.viewer.launch_passive(
-    model=model,
-    data=data,
-    show_left_ui=False,
-    show_right_ui=False)
-
-key_id = model.key("home").id
-
-mujoco.mj_resetDataKeyframe(model, data, key_id)
-
-mm = np.zeros((model.nv, model.nv))
-dt = model.opt.timestep
-mujoco.mj_resetDataKeyframe(model, data, key_id)
-mujoco.mj_forward(model, data)
-force_site = model.site('tip').id
-
-# ic(data.site(force_site).xpos, data.site(force_site).xquat)
-# ic(data.xquat.shape)
-eef_body_index = model.body('hand').id
-end_effector_mat = data.site('tip').xmat
-end_effector_quat = np.zeros((4, ))
-mujoco.mju_mat2Quat(end_effector_quat, end_effector_mat)
-ic(end_effector_quat)
-
-# x_ori = Quat2rot(end_effector_quat, "wxyz", "xyz", True)
-# ic(x_ori)
-
-# exit()
-x_init = data.site(force_site).xpos.reshape(-1, 1)
-x_final = copy.deepcopy(x_init) + np.array([0.0, 0.0, -0.3]).reshape(-1, 1)
-# # ic(x_init, x_final)
-# t = np.linspace(0, 1, 10)
-
-# xpos_t = x_init * (1-t)  + x_final * t
-# xpos_t = xpos_t.T
-
-# xori_t = np.zeros((10, 3))
-# x_t = np.concatenate((xpos_t, xori_t), axis=1)
-# ic(x_t.shape)
-# # exit()
-
-# xd_t = np.zeros((100, 6))
-# xdd_t = np.zeros((100, 6))
-
 # * mujoco: wxyz, normal: xyzw
-
-
 def mujoco2normal(q):
     return np.array([q[1], q[2], q[3], q[0]])
-
 
 def normal2mujoco(q):
     return np.array([q[3], q[0], q[1], q[2]])
@@ -162,16 +108,24 @@ def normal2mujoco(q):
 def slerp(x_init_quat, x_final_quat, final_n, n_steps):
     x_init_quat = mujoco2normal(x_init_quat)
     x_final_quat = mujoco2normal(x_final_quat)
-
+    
     rot_times = np.array([0, final_n])
     rots = R.from_quat([x_init_quat, x_final_quat])
-
+    
     slerp = Slerp(rot_times, rots)
     times = np.linspace(0, final_n, n_steps)
     quats = slerp(times).as_quat()
     quats = np.array([normal2mujoco(q) for q in quats])
-    return quats
-
+    quat_dot = np.diff(quats, axis=0) / (final_n / n_steps)
+    quat_ddot = np.diff(quat_dot, axis=0) / (final_n / n_steps)
+    
+    quat_dot_f, quat_ddot_f = np.zeros_like(quats), np.zeros_like(quats)
+    quat_dot_f[:-1, :] = copy.deepcopy(quat_dot)
+    quat_dot_f[-1:, :] = copy.deepcopy(quat_dot[-1, :])
+    quat_ddot_f[:-2, :] = copy.deepcopy(quat_ddot)
+    quat_ddot_f[-2:, :] = copy.deepcopy(quat_ddot[-2, :])
+    
+    return quats, quat_dot_f, quat_ddot_f 
 
 def quintic_pos(init_pos, final_pos, final_n, nsteps):
     x_poly = QuinticPolynomial(init_pos[0], np.array([0.]), np.array([0.]),
@@ -192,72 +146,74 @@ def quintic_pos(init_pos, final_pos, final_n, nsteps):
                               y_poly.calc_second_derivative(times),
                               z_poly.calc_second_derivative(times)]).T
 
-    return pos_ref, pos_dot_ref, pos_ddot_ref
+    return pos_ref, pos_dot_ref, pos_ddot_ref    
+    
+def main():
+    model_path = '/home/faizal/Documents/MuJoCo-Dual-Arm/models/utils/franka_emika_panda/panda.xml'
 
-# ic(slerp([1,0,0,0], [0,1,0,0], 100).shape)
+    model = mujoco.MjModel.from_xml_path(model_path)
+    data = mujoco.MjData(model)
+    viewer = mujoco.viewer.launch_passive(
+        model=model,
+        data=data,
+        show_left_ui=False,
+        show_right_ui=False)
 
+    key_id = model.key("home").id
 
-ic(end_effector_quat.shape)
-
-quat_trajs = slerp(end_effector_quat, end_effector_quat, 500, 500)
-pos_ref, pos_dot_ref, pos_ddot_ref = quintic_pos(x_init, x_final, 500, 500)
-ic(quat_trajs.shape)
-ic(pos_ref.shape, pos_dot_ref.shape, pos_ddot_ref.shape)
-exit()
-
-x_init_pos = data.site(force_site).xpos
-x_init_quat = end_effector_quat
-x_init = (list(x_init_pos), list(x_init_quat))
-
-x_final_pos = copy.deepcopy(x_init_pos) + np.array([0.0, 0.0, -0.3])
-x_final_quat = x_init_quat
-x_final = (list(x_final_pos), list(x_final_quat))
-
-x_traj = create_quintic_trajectory(x_init, x_final, 10)
-x_traj = np.array(x_traj)
-ic(x_traj)
-
-x_traj_pos = x_traj[:, :3]
-x_traj_quat = slerp(x_init_quat, x_final_quat, 10)
-
-# exit()
-
-# Compute the full mass matrix from the compressed qM
-
-jac_prev = np.zeros((6, model.nv))
-counter = 0
-
-while viewer.is_running():
+    dt = model.opt.timestep
     mujoco.mj_resetDataKeyframe(model, data, key_id)
     mujoco.mj_forward(model, data)
-    mujoco.mj_step(model, data)
+    force_site = model.site('tip').id
 
-    Mx_inv, MM, C, J, J_dot, fext = conv_parameters(model, data, jac_prev)
+    end_effector_mat = data.site('tip').xmat
+    end_effector_quat = np.zeros((4, ))
+    mujoco.mju_mat2Quat(end_effector_quat, end_effector_mat)
 
-    jac_prev = copy.deepcopy(J)
+    x_init = data.site(force_site).xpos.reshape(-1, 1)
+    x_final = copy.deepcopy(x_init) + np.array([0.0, 0.0, -0.3]).reshape(-1, 1)
+    
+    quat_ref, quat_dot_ref, quat_ddot_ref = slerp(end_effector_quat, end_effector_quat, 500, 500)
+    pos_ref, pos_dot_ref, pos_ddot_ref = quintic_pos(x_init, x_final, 500, 500)
 
-    xd = jac_prev @ data.qvel
+    pose_ref = np.concatenate([pos_ref, quat_ref], axis=-1)
+    pose_dot_ref = np.concatenate([pos_dot_ref, quat_dot_ref], axis=-1)
+    pose_ddot_ref = np.concatenate([pos_ddot_ref, quat_ddot_ref], axis=-1)
 
-    # ic(M.shape, C.shape, J.shape, J_dot.shape, fext.shape)
+    ic(pose_ref.shape, pose_dot_ref.shape, pose_ddot_ref.shape)
 
-    # print(f"nv: {model.nv}")
-    # print(data.qM.shape)
-    # mujoco.mj_fullM(model, mm, data.qM)
-    # print(f"mm: {mm.shape} det: {np.linalg.det(mm)}")
-    # # print(f"data: {data.contact}")
-
-    # print(data.contact)
-    # for id,c in enumerate(data.contact):
-    #     print("contact:", id, c)
-
-    # M, C, J, J_dot, fext = conv_parameters(data.efc_J)
-
-    # convex_optimization( x_ref, xd_ref, xd, xdd_ref, fext, D, K, J, M, C, dt)
+    jac_prev = np.zeros((6, model.nv))
+    counter = 0
 
     K = np.diag([100, 100, 100, 100, 100, 100])
     D = 2 * np.sqrt(K)
-    # q_dd = convex_optimization(model, data, x_t[counter], xd_t[counter], xd, xdd_t[counter],
-    # fext, D, K, J, J_dot, Mx_inv, MM, C, dt)
-    viewer.sync()
-    print("=" * 50)
-    # counter += 1
+
+    while viewer.is_running():
+        mujoco.mj_resetDataKeyframe(model, data, key_id)
+        mujoco.mj_forward(model, data)
+        mujoco.mj_step(model, data)
+
+        Mx_inv, MM, C, J, J_dot, fext = conv_parameters(model, data, jac_prev)
+
+        jac_prev = copy.deepcopy(J)
+
+        xd = jac_prev @ data.qvel
+        
+        q_dd = convex_optimization(model, 
+                            data, 
+                            pose_ref[counter],
+                            pose_dot_ref[counter],
+                            xd,
+                            pose_ddot_ref[counter],
+                            fext,
+                            D, K, J, J_dot, Mx_inv, MM, C, dt)
+        
+        viewer.sync()
+        print("=" * 50)
+        counter += 1
+    
+    
+
+
+if __name__ == "__main__":
+    main()
