@@ -208,7 +208,7 @@
                                     <geom mesh="link6_15" material="black" class="visual" />
                                     <geom mesh="link6_16" material="white" class="visual" />
                                     <geom mesh="link6_c" class="collision" />
-                                    <body name="link7" pos="0.088 0 0" quat="1 1 0 0">
+                                    <body name="link7" pos="0.088 0 0" euler='1.57 0 0.7854'>
                                         <inertial mass="7.35522e-01"
                                             pos="1.0517e-2 -4.252e-3 6.1597e-2"
                                             fullinertia="1.2516e-2 1.0027e-2 4.815e-3 -4.28e-4 -1.196e-3 -7.41e-4" />
@@ -224,10 +224,10 @@
                                         <geom mesh="link7_c" class="collision" />
 
                                         <!-- <site name="attachment_site" pos="0 0 0.107" /> -->
-                                        <site name="tip" size="0.01" pos="0 0 0" />
+                                        <!-- <site name="tip" size="0.05" pos="0 0 0" euler="0 0 0" /> -->
 
                                         <body name="hand" pos="0 0 0.107"
-                                            quat="0.9238795 0 0 -0.3826834">
+                                            euler = "0 0 -0.7508">
                                             <inertial mass="0.73" pos="-0.01 0 0.03"
                                                 diaginertia="0.001 0.0025 0.0017" />
                                             <geom mesh="hand_0" material="off_white" class="visual" />
@@ -236,6 +236,7 @@
                                             <geom mesh="hand_3" material="white" class="visual" />
                                             <geom mesh="hand_4" material="off_white" class="visual" />
                                             <geom mesh="hand_c" class="collision" />
+                                            <site name="tip" size="0.05" pos="0 0 0" euler="0 0 0" />
                                             <body name="left_finger" pos="0 0 0.0584">
                                                 <inertial mass="0.015" pos="0 0 0"
                                                     diaginertia="2.375e-6 2.375e-6 7.5e-7" />
@@ -297,27 +298,20 @@
     </equality>
 
     <actuator>
-        <general class="panda" name="actuator1" joint="joint1" gainprm="4500" biasprm="0 -4500 -450" />
-        <general class="panda" name="actuator2" joint="joint2" gainprm="4500" biasprm="0 -4500 -450"
-            ctrlrange="-1.7628 1.7628" />
-        <general class="panda" name="actuator3" joint="joint3" gainprm="3500" biasprm="0 -3500 -350" />
-        <general class="panda" name="actuator4" joint="joint4" gainprm="3500" biasprm="0 -3500 -350"
-            ctrlrange="-3.0718 -0.0698" />
-        <general class="panda" name="actuator5" joint="joint5" gainprm="2000" biasprm="0 -2000 -200"
-            forcerange="-12 12" />
-        <general class="panda" name="actuator6" joint="joint6" gainprm="2000" biasprm="0 -2000 -200"
-            forcerange="-12 12"
-            ctrlrange="-0.0175 3.7525" />
-        <general class="panda" name="actuator7" joint="joint7" gainprm="2000" biasprm="0 -2000 -200"
-            forcerange="-12 12" />
+        <motor class="panda" name="actuator1" joint="joint1" forcerange="-87 87" ctrlrange="-1000 1000"/>
+        <motor class="panda" name="actuator2" joint="joint2" forcerange="-87 87" ctrlrange="-1000 1000"/>
+        <motor class="panda" name="actuator3" joint="joint3" forcerange="-87 87" ctrlrange="-1000 1000"/>
+        <motor class="panda" name="actuator4" joint="joint4" forcerange="-87 87" ctrlrange="-1000 1000"/>
+        <motor class="panda" name="actuator5" joint="joint5" forcerange="-87 87" ctrlrange="-1000 1000"/>
+        <motor class="panda" name="actuator6" joint="joint6" forcerange="-87 87" ctrlrange="-1000 1000"/>
+        <motor class="panda" name="actuator7" joint="joint7" forcerange="-87 87" ctrlrange="-1000 1000"/>
         <!-- Remap original ctrlrange (0, 0.04) to (0, 255): 0.04 * 100 / 255 = 0.01568627451 -->
-        <general class="panda" name="actuator8" tendon="split" forcerange="-100 100"
-            ctrlrange="0 255"
-            gainprm="0.01568627451 0 0" biasprm="0 -100 -10" />
+        <position name="actuator8" joint="finger_joint1" kp="5000" forcerange="-70 70" ctrlrange="0 0.04"/> velocity=".2"
+        <position name="actuator9" joint="finger_joint2" kp="5000" forcerange="-70 70" ctrlrange="0 0.04"/> velocity=".2"
     </actuator>
 
     <keyframe>
-        <key name="home" qpos="0 0 0 -1.57079 0 1.57079 -0.7853 0.04 0.04"
-            ctrl="0 0 0 -1.57079 0 1.57079 -0.7853 255" />
+        <key name="home" qpos="0 0 0 -1.57079 0 1.57079 0 0.04 0.04"  
+            ctrl="0 0 0 0 0 0 0 0 0" />
     </keyframe>
 </mujoco>
