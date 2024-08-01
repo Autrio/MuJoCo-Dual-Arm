@@ -220,7 +220,6 @@ class Impedance:
             elif(state=="close"):
                 self.data.ctrl[16:18]=0.0; #close R gripper
     
-
     def setupDatacap(self):
         self.time_steps = []
         self.dxL_xlist = []

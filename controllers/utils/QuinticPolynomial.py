@@ -57,15 +57,16 @@ class QuinticPolynomial:
         return xs
 
     def calc_first_derivative(self, s):
-        xs = self.a_1 + 2 * self.a_2 * s + 3 * self.a_3 * s ** 2 + 4 * self.a_4 * s ** 3 + 5 * self.a_5 * s ** 4
+        xs = self.a_1 + (2 * self.a_2 * s) + (3 * self.a_3 * (s ** 2)) + \
+        (4 * self.a_4 * (s ** 3)) + (5 * self.a_5 * (s ** 4))
         return xs
 
     def calc_second_derivative(self, s):
-        xs = 2 * self.a_2 + 6 * self.a_3 * s + 12 * self.a_4 * s ** 2 + 20 * self.a_5 * s ** 3
+        xs = 2 * self.a_2 + 6 * self.a_3 * s + 12 * self.a_4 * (s ** 2) + 20 * self.a_5 * (s ** 3)
         return xs
 
     def calc_third_derivative(self, s):
-        xs = 6 * self.a_3 + 24 * self.a_4 * s + 60 * self.a_5 * s ** 2
+        xs = 6 * self.a_3 + 24 * self.a_4 * s + 60 * self.a_5 * (s ** 2)
         return xs
 
 def create_quintic_trajectory(init_pose, final_pose, steps):
@@ -88,7 +89,8 @@ def create_quintic_trajectory(init_pose, final_pose, steps):
         quat /= np.linalg.norm(quat)  # Normalize quaternion to ensure it remains valid
         traj.append(pos + quat.tolist())
 
-    return traj
+    
+    return traj, 
 
 def generate_end_effector_trajectories(object_trajectory, current_obj_pose, current_pose_L, current_pose_R):
     AtrajL = []
