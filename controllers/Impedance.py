@@ -261,7 +261,8 @@ class Impedance:
         self.SD["right_finger1_force"] = []
         self.SD["right_finger2_force"] = []
         self.iter = 0
-
+        self.ErrObjectPos = []
+        self.ErrObjectQuat = []
         
     def Datacap(self):
         self.erL = np.linalg.norm(np.append(self.dxL,self.roL))
@@ -301,10 +302,23 @@ class Impedance:
         self.SD["left_finger1_force"].append(self.data.sensor("LHjafF1").data.copy())
         self.SD["left_finger2_force"].append(self.data.sensor("LHjafF2").data.copy())
         self.SD["right_finger1_force"].append(self.data.sensor("RHjafF1").data.copy())
-        self.SD["right_finger2_force"].append(self.data.sensor("RHjafF2").data.copy())        
+        self.SD["right_finger2_force"].append(self.data.sensor("RHjafF2").data.copy())
+
+
 
     def makeplots(self):
+        # print(desired_object_trajectory)
+        # exit()
+        # for pointD,pointA in zip(desired_object_trajectory[:,:3],self.object_pos):
+        #     self.ErrObjectPos.append(np.linalg.norm(pointD-pointA))
+        # for quatD,quatA in zip(desired_object_trajectory[:,3:],self.object_quat):
+        #     self.ErrObjectQuat.append(np.linalg.norm(quatD-quatA)) 
+            # the above is wrong pls change it to do error = q times q*
+
+
         # Convert lists to numpy arrays for easier manipulation
+        self.ErrObjectPos = np.array(self.ErrObjectPos)
+        self.ErrObjectQuat = np.array(self.ErrObjectQuat)
         self.time_steps = np.array(self.time_steps)
         self.dxL_xlist = np.array(self.dxL_xlist)
         self.dxL_ylist = np.array(self.dxL_ylist)
@@ -507,6 +521,22 @@ class Impedance:
         plt.title('Object Rotation')
         plt.legend()
 
+        # plt.subplot(2,2,3)
+        # plt.plot(self.time_steps,self.ErrObjectPos,label = "Object position error")
+        # plt.xlabel('Time (s)')
+        # plt.xlabel('Time (s)')
+        # plt.ylabel('Error')
+        # plt.title('Position error')
+        # plt.legend()
+
+        # plt.subplot(2,2,4)
+        # plt.plot(self.time_steps,self.ErrObjectQuat,label = "Object orientation error")
+        # plt.xlabel('Time (s)')
+        # plt.xlabel('Time (s)')
+        # plt.ylabel('Error')
+        # plt.title('orientation error')
+        # plt.legend()
+
         #sensor data ---------------------------------------------------------------------------------------
 
         plt.figure(figsize=(12,6))
@@ -548,3 +578,38 @@ class Impedance:
 
         plt.tight_layout()
         plt.show()
+
+    def saveData(self,name,graspIdx,mass,intertia):
+        np.savez("./dataset/{}-{}-{}-{}.npz".format(name,graspIdx,mass,intertia),
+        dxL_xlist= self.dxL_xlist, 
+        dxL_ylist= self.dxL_ylist, 
+        dxL_zlist= self.dxL_zlist, 
+        dxR_xlist= self.dxR_xlist, 
+        dxR_ylist= self.dxR_ylist, 
+        dxR_zlist= self.dxR_zlist,    
+        error_quatL_xlist= self.error_quatL_xlist,
+        error_quatL_ylist= self.error_quatL_ylist,
+        error_quatL_zlist= self.error_quatL_zlist,
+        error_quatL_wlist= self.error_quatL_wlist,
+        error_quatR_xlist= self.error_quatR_xlist,
+        error_quatR_ylist= self.error_quatR_ylist,
+        error_quatR_zlist= self.error_quatR_zlist,
+        error_quatR_wlist= self.error_quatR_wlist,        
+        erL_list= self.erL_list, 
+        erR_list= self.erR_list, 
+        er_quatL_list= self.er_quatL_list,
+        er_quatR_list= self.er_quatR_list,
+        posL_list= self.posL_list, 
+        posR_list= self.posR_list, 
+        quatL_list= self.quatL_list, 
+        quatR_list= self.quatR_list, 
+        erL_joint= self.erL_joint,
+        erR_joint= self.erR_joint,
+        joint_trajL= self.joint_trajL, 
+        joint_trajR= self.joint_trajR, 
+        forceL_list= self.forceL_list ,
+        forceR_list= self.forceR_list ,
+        object_pos= self.object_pos,
+        object_quat= self.object_quat,
+        error_object_pos = self.ErrObjectPos,
+        error_object_quat = self.ErrObjectQuat)

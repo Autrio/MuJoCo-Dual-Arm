@@ -8,6 +8,7 @@ fi
 
 name=$(yq -r '.parameters.name' config.yaml)
 msc=$(yq -r '.parameters.ACD.Mujoco_scale' config.yaml)
+minz=$(yq -r '.parameters.ACD.minZ' config.yaml)
 
 tol=$(yq -r '.parameters.pnp.tolerance' config.yaml)
 viz=$(yq -r '.parameters.pnp.visual' config.yaml)
@@ -30,7 +31,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-python3 -m examples.pnp -d dual -t $tol -m $viz -o $name -ms $msc -g $Gidx
+python3 -m examples.pnp -d dual -t $tol -m $viz -o $name -ms $msc -g $Gidx -z $minz
 if [ $? -ne 0 ]; then
   echo "Controller runtime call failed"
   exit 1

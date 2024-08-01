@@ -87,7 +87,6 @@ def create_quintic_trajectory(init_pose, final_pose, steps):
         quat = [qx_poly.calc_point(i), qy_poly.calc_point(i), qz_poly.calc_point(i), qw_poly.calc_point(i)]
         quat /= np.linalg.norm(quat)  # Normalize quaternion to ensure it remains valid
         traj.append(pos + quat.tolist())
-
     return traj
 
 def generate_end_effector_trajectories(object_trajectory, current_obj_pose, current_pose_L, current_pose_R):

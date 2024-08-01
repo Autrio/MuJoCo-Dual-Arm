@@ -33,6 +33,7 @@ parser.add_argument("-o","--object",type=str,required=True)
 
 parser.add_argument("-ms","--MujocoScale",type=float,default=1.0)
 
+parser.add_argument("-z","--Zoffset",type=float,default=0.3)
 
 args = parser.parse_args()
 
@@ -85,6 +86,8 @@ gravity_compensation = True
 dt = 0.002
 # object_scale = 0.024724145342293464
 
+# object_trajectory = []
+
 def run(controller,tolerance, graspIdx):
     if(not tolerance):
        tolerance = 0.04
@@ -103,9 +106,9 @@ def run(controller,tolerance, graspIdx):
     grasps = np.load("examples/generatedGrasps/grasp-{}.npy".format(name))
     graspL = grasps[graspIdx][0]
     graspR = grasps[graspIdx][1]
-    objStrPos = [-0.4,0.0,0.28]
-    objStrOri = [0,0,0]
     object_scale = args.MujocoScale
+    objStrPos = [-0.4,0.0,args.Zoffset*object_scale]
+    objStrOri = [0,0,0]
 
     
     Util = RotationUtils()
@@ -180,7 +183,7 @@ def run(controller,tolerance, graspIdx):
 
                 # init_object_pose = ([0.5, 0.0,0.3], [1, 0, 0, 1])
                 init_object_pose = [list(data.body("collision_object").xpos.copy()),list(data.body("collision_object").xquat.copy())]
-                final_object_pose = ([0.4,0.0,0.7], [1,0, 0, -1])
+                final_object_pose = ([-0.2,0.0,0.7], [1,0, 0, 0])
                 
                 # Create a single trajectory for the object's center of mass
                 object_trajectory = create_quintic_trajectory(init_object_pose, final_object_pose, 1500)
@@ -236,7 +239,9 @@ def main():
 
     run(controller,args.tolerance,args.graspIdx)
 
-    # controller.makeplots()
+    controller.makeplots()
+
+    controller.saveData(name,args.graspIdx,5,2)
 
 if __name__ == "__main__":
     main()

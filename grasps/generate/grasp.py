@@ -3,7 +3,7 @@ import trimesh
 from scipy.spatial.transform import Rotation as R
 import grasps.generate.utils as utils
 import h5py
-
+import os
 import torch
 
 import argparse
@@ -134,6 +134,8 @@ def plot_obj(obj_file, scale, do_mean_center=True, grasp_idx=10, current_T=None,
         scene.add_geometry(mesh2)
     return scene
 
-    
-np.save('examples/generatedGrasps/grasp-{}.npy'.format(name), T_org)
-print(scale_org)
+if os.path.exists("/examples/generatedGrasps/grasp-{}.npy"):
+    np.save('examples/generatedGrasps/grasp-{}.npy'.format(name), T_org)
+    print(scale_org)
+else:
+    print(scale_org)
