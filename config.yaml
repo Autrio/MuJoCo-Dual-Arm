@@ -1,7 +1,7 @@
 parameters:
   ACD:
     Mujoco_scale: 1
-    minZ: 0.2211907696027797
+    minZ: 0.2235932541966166
   name: table
   pnp:
     grasp_idx: 56
