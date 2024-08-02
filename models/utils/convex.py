@@ -15,6 +15,7 @@ from controllers.utils.QuinticPolynomial import create_quintic_trajectory, Quint
 
 import cvxpy as cp
 import copy
+import xml.etree.ElementTree as ET
 
 
 def Quat2rot(quat, informat: str, outformat: str, degrees: bool):
@@ -28,6 +29,18 @@ def Quat2rot(quat, informat: str, outformat: str, degrees: bool):
         return (r.as_euler(outformat, degrees))
     else:
         raise (ValueError)
+    
+def Traj_plot(traj):
+    Xroot = ET.Element("mujocoinclude")
+    for i in range(0, len(traj), 10):
+        point = traj[i]
+        Xbody = ET.SubElement(Xroot, "body",attrib={"name":"target{}".format(i),"mocap":"true","pos":"{} {} {}".format(point[0],point[1],point[2])})
+        Xgeom = ET.SubElement(Xbody, "geom",attrib={"type":"sphere","size":"0.01","rgba":"1 0 0 1", "contype":"0", "conaffinity":"0"})
+        Xsite = ET.SubElement(Xbody, "site",attrib={"type":"sphere","size":"0.01","rgba":"1 0 0 1"})
+        
+    Xtree = ET.ElementTree(Xroot)
+    with open("/home/faizal/Documents/MuJoCo-Dual-Arm/models/utils/franka_emika_panda/traj.xml", "wb") as f:
+        Xtree.write(f, encoding="utf-8")       
 
 
 def conv_parameters(model, data, jac_prev, dt=0.1, site='tip'):
@@ -51,6 +64,7 @@ def conv_parameters(model, data, jac_prev, dt=0.1, site='tip'):
     mujoco.mj_fullM(model, mm, data.qM)
 
     fext = np.zeros((6, ))
+    fext[1] = 9.8
     # id = 0
     # mujoco.mj_contactForce(model, data, id, fext)
     # print("External Force : ", fext)
@@ -69,7 +83,8 @@ def convex_optimization(model, data, x_ref, xd_ref, xd, xdd_ref, fext, D, K, J, 
     x_pos = data.site('tip').xpos
 
     end_effector_quat = data.xquat[model.body('hand').id]
-    x_ori = Quat2rot(end_effector_quat, "wxyz", "xyz", True)
+    # exit()
+    x_ori = Quat2rot(end_effector_quat, "wxyz", "xyz", False)
     x = np.concatenate((x_pos, x_ori))
     error_x = x_ref - x
     error_xd = xd_ref - xd
@@ -79,13 +94,13 @@ def convex_optimization(model, data, x_ref, xd_ref, xd, xdd_ref, fext, D, K, J, 
     q_dd = cp.Variable(9)  # q_dd = R^7
 
     # * bounds
-    tau_max = np.array([10] * 9)  # tau_max = R^9
-    tau_min = np.array([-10] * 9)  # tau_min = R^9
-    qdd_min = np.array([-20] * 9)  # qdd_max = R^9
-    qdd_max = np.array([20] * 9)  # qdd_min = R^20
+    tau_max = np.array([1000] * 9)  # tau_max = R^9
+    tau_min = np.array([-1000] * 9)  # tau_min = R^9
+    qdd_min = np.array([-1000] * 9)  # qdd_max = R^9
+    qdd_max = np.array([1000] * 9)  # qdd_min = R^20
     # min ||J@q_dd + J_d@q_d - x_dd||
 
-    objective = cp.Minimize(cp.norm(J @ q_dd + J_dot @ q_d + x_dd))
+    objective = cp.Minimize(cp.sum_squares(J @ q_dd + J_dot @ q_d - x_dd))
     # ic(np.diag(MM))
     # ic(is_positive_semidefinite(MM))
     
@@ -169,7 +184,12 @@ def main():
         show_right_ui=False)
 
     key_id = model.key("home").id
-    model.opt.gravity = -0.0
+    model.opt.gravity = -9.8
+    
+    mujoco.mj_resetDataKeyframe(model, data, key_id)
+    mujoco.mj_forward(model, data)
+    mujoco.mj_step(model, data)
+    viewer.sync()
     
     
     dt = model.opt.timestep
@@ -182,29 +202,27 @@ def main():
 
 
     x_init = data.site(force_site).xpos.reshape(-1, 1)
-    x_final = copy.deepcopy(x_init) + np.array([0.0, 0.3, 0.2]).reshape(-1, 1)
-    quat_ref, quat_dot_ref, quat_ddot_ref = slerp(end_effector_quat, end_effector_quat, 200, 200)
-    # ic(quat_ref)
-    pos_ref, pos_dot_ref, pos_ddot_ref = quintic_pos(x_init, x_final, 200, 200)
-    # ic(pos_ref)
-    # exit()
+    x_final = copy.deepcopy(x_init) + np.array([0.0, 0.2, -0.3]).reshape(-1, 1)
+    quat_ref, quat_dot_ref, quat_ddot_ref = slerp(end_effector_quat, end_effector_quat, 1000, 1000)
+    pos_ref, pos_dot_ref, pos_ddot_ref = quintic_pos(x_init, x_final, 1000, 1000)
 
     pose_ref = np.concatenate([pos_ref, quat_ref], axis=-1) # 500, 7
     pose_dot_ref = np.concatenate([pos_dot_ref, quat_dot_ref], axis=-1) # 500, 7
     pose_ddot_ref = np.concatenate([pos_ddot_ref, quat_ddot_ref], axis=-1) # 500, 7
+    
+    # Traj_plot(pose_ref)
 
     # ic(pose_ref.shape, pose_dot_ref.shape, pose_ddot_ref.shape)
 
     jac_prev = np.zeros((6, model.nv))
     counter = 0
 
-    K = np.diag([100, 100, 100, 100, 100, 100])
-    D = 2 * np.sqrt(K)
+    K = np.diag([300.0] * 6)
+    D = 4 * np.sqrt(K)
 
-    mujoco.mj_resetDataKeyframe(model, data, key_id)
-    mujoco.mj_forward(model, data)
 
     while viewer.is_running():
+        data.mocap_pos[model.body("target").mocapid[0]] = x_final.reshape(-1)
 
         Mx_inv, MM, C, J, J_dot, fext = conv_parameters(model, data, jac_prev, dt)
 
@@ -212,7 +230,7 @@ def main():
 
         xd = jac_prev @ data.qvel
         
-        if counter < 200:
+        if counter < 1000:
             q_dd = convex_optimization(model, 
                                 data, 
                                 pose_ref[counter],
@@ -223,14 +241,16 @@ def main():
                                 D, K, J, J_dot, Mx_inv, MM, C, dt)
             
             
+            if q_dd is not None:
+                pass
+            
             optTau = np.zeros((9,))
             optTau = MM @ q_dd + C
-            
-            
             data.ctrl[:9] = optTau
             
             mujoco.mj_step(model, data)
-            
+            # pass
+        
         viewer.sync()
     
         # print("=" * 50)

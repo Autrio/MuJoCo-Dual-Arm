@@ -276,7 +276,14 @@
                     </body>
                 </body>
             </body>
+        </body> 
+
+        <body name="target" mocap="true">
+            <geom type="box" size=".05 .05 .05" contype="0" conaffinity="0" rgba=".6 .3 .3 .5"/>
+            <site type="sphere" size="0.01" rgba="0 0 1 1" group="1"/>
         </body>
+        <!-- <include file="/home/faizal/Documents/MuJoCo-Dual-Arm/models/utils/franka_emika_panda/traj.xml"/> -->
+            
     </worldbody>
 
     <sensor>
@@ -301,10 +308,10 @@
         <motor class="panda" name="actuator1" joint="joint1" forcerange="-87 87" ctrlrange="-1000 1000"/>
         <motor class="panda" name="actuator2" joint="joint2" forcerange="-87 87" ctrlrange="-1000 1000"/>
         <motor class="panda" name="actuator3" joint="joint3" forcerange="-87 87" ctrlrange="-1000 1000"/>
-        <motor class="panda" name="actuator4" joint="joint4" forcerange="-87 87" ctrlrange="-1000 1000"/>
-        <motor class="panda" name="actuator5" joint="joint5" forcerange="-87 87" ctrlrange="-1000 1000"/>
-        <motor class="panda" name="actuator6" joint="joint6" forcerange="-87 87" ctrlrange="-1000 1000"/>
-        <motor class="panda" name="actuator7" joint="joint7" forcerange="-87 87" ctrlrange="-1000 1000"/>
+        <motor class="panda" name="actuator4" joint="joint4" forcerange="-12 12" ctrlrange="-1000 1000"/>
+        <motor class="panda" name="actuator5" joint="joint5" forcerange="-12 12" ctrlrange="-1000 1000"/>
+        <motor class="panda" name="actuator6" joint="joint6" forcerange="-12 12" ctrlrange="-1000 1000"/>
+        <motor class="panda" name="actuator7" joint="joint7" forcerange="-12 12" ctrlrange="-1000 1000"/>
         <!-- Remap original ctrlrange (0, 0.04) to (0, 255): 0.04 * 100 / 255 = 0.01568627451 -->
         <position name="actuator8" joint="finger_joint1" kp="5000" forcerange="-70 70" ctrlrange="0 0.04"/> velocity=".2"
         <position name="actuator9" joint="finger_joint2" kp="5000" forcerange="-70 70" ctrlrange="0 0.04"/> velocity=".2"
