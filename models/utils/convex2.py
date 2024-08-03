@@ -18,7 +18,6 @@ import copy
 import xml.etree.ElementTree as ET
 from tqdm import tqdm
 
-
 def Quat2rot(quat, informat: str, outformat: str, degrees: bool):
     if (informat == "xyzw"):
         r = R.from_quat(quat)
@@ -31,37 +30,38 @@ def Quat2rot(quat, informat: str, outformat: str, degrees: bool):
     else:
         raise (ValueError)
     
-def Traj_plot(traj):
-    Xroot = ET.Element("mujocoinclude")
-    for i in range(0, len(traj), 10):
-        point = traj[i]
-        Xbody = ET.SubElement(Xroot, "body",attrib={"name":"target{}".format(i),"mocap":"true","pos":"{} {} {}".format(point[0],point[1],point[2])})
-        Xgeom = ET.SubElement(Xbody, "geom",attrib={"type":"sphere","size":"0.01","rgba":"1 0 0 1", "contype":"0", "conaffinity":"0"})
-        Xsite = ET.SubElement(Xbody, "site",attrib={"type":"sphere","size":"0.01","rgba":"1 0 0 1"})
-        
-    Xtree = ET.ElementTree(Xroot)
-    with open("/home/faizal/Documents/MuJoCo-Dual-Arm/models/utils/franka_emika_panda/traj.xml", "wb") as f:
-        Xtree.write(f, encoding="utf-8")       
 
+def params(model,data,dt=0.002,site='tip'):
+    q = data.qpos[:]
+    J = np.zeros((6,model.nv))
+    Jdt = np.zeros((6,model.nv))
+    mujoco.mj_jacSite(model,data,J[:3],J[3:],model.site(site).id)
+    
+    #compute Jdt
+    Integration_dt = 2*1e-5
+    mujoco.mj_integratePos(model,q,data.qvel,Integration_dt)
+    mujoco.mj_kinematics(model,data)
+    mujoco.mj_comPos(model,data)
+    
+    mujoco.mj_jacSite(model,data,Jdt[:3],Jdt[3:],model.site(site).id)
+    
+    Jdot = (Jdt-J)/Integration_dt
 
-def conv_parameters(model, data, jac_prev, dt=0.1, site='tip'):
-    # jac_now = data.efc_J # current Jacobian
-    q_pos = data.qpos
-    jac_now = np.zeros((6, model.nv))
-    force_site = model.site(site).id
-    mujoco.mj_jacSite(model, data, jac_now[:3], jac_now[3:], force_site)
-
+    data.qpos = q
+    
     C = data.qfrc_bias  # bias force: Coriolis, centrifugal, gravitational
-    # C = C.reshape(-1,1)
-        
-
-    jac_dot = (jac_now - jac_prev)/dt
+    
     M_all = np.zeros((model.nv, model.nv))
     # Compute the task-space inertia matrix.
     mujoco.mj_solveM(model, data, M_all, np.eye(model.nv))
     M_inv = M_all[:9, :9]
-    Mx_inv = jac_now @ M_inv @ jac_now.T
-    
+    # Mx_inv_quat = J[:3] @ M_inv @ J[:3].T
+    # Mx_inv_pos = J[3:] @ M_inv @ J[3:].T
+    # ic(Mx_inv_quat.shape, Mx_inv_pos.shape)
+    # Mx_inv = np.concatenate((Mx_inv_quat, Mx_inv_pos), axis=0)
+    # ic(Mx_inv)
+    Mx_inv = J @ M_inv @ J.T
+  
 
     mm = np.zeros((model.nv, model.nv))  # mass matrix
     # mm_inv = np.linalg.inv(M_inv)
@@ -74,76 +74,64 @@ def conv_parameters(model, data, jac_prev, dt=0.1, site='tip'):
     # print("External Force : ", fext)
     # print("Joint Force : ", data.qfrc_applied.shape)
 
-    return Mx_inv, mm, C, jac_now, jac_dot, fext, q_pos
+    return Mx_inv, mm, C, J, Jdot, fext, q
 
-def is_positive_semidefinite(matrix):
-    eigenvalues = np.linalg.eigvals(matrix)
-    return np.all(eigenvalues >= 0)
+def optimize(model,data,xr,xrdot,xrddot,J,Jdot,K,D,Mx_inv,MM,C,counter):
+    qd = data.qvel[:]
+    xpos = data.site("tip").xpos
 
-
-def convex_optimization(model, data, x_ref, xd_ref, xd, xdd_ref, fext, D, K, J, J_dot, Mx_inv, MM, C, dt,counter, q_dd_prev=None):
-    # * constants
-    q_d = data.qvel
-    x_pos = data.site('tip').xpos
-
-    end_effector_quat = data.xquat[model.body('hand').id]
-    # exit()
-    x_ori = Quat2rot(end_effector_quat, "wxyz", "xyz", False)
-    x = np.concatenate((x_pos, x_ori))
-    error_x = x_ref - x
-    error_xd = xd_ref - xd
-    # model.body.actuatorgravcomp = True
-    x_dd = xdd_ref + Mx_inv @ (D @ error_xd + K @ error_x - fext)
-    # x_dd = xdd_ref + (D @ error_xd + K @ error_x - fext) 
-    # x_dd = xdd_ref + ( K @ error_x - fext) 
+    Temp = data.site("tip").xmat
+    Xquat = np.zeros((4,))
+    mujoco.mju_mat2Quat(Xquat,Temp)
     
-    q_dd = cp.Variable(9)  # q_dd = R^7
-    # if q_dd_prev is not None:
-    #     q_dd.value = copy.deepcopy(q_dd_prev)
+    xori = Quat2rot(Xquat,"wxyz","xyz",False)
+    x = np.concatenate((xpos,xori))
     
-    ic(np.linalg.norm(J), np.linalg.norm(J_dot))
-         
-    # * bounds
-    tau_min = np.array([-10] * 9)  # tau_min = R^9
-    tau_max = np.array([10] * 9)  # tau_max = R^9
-    qdd_min = np.array([-10] * 9)  # qdd_max = R^9
-    qdd_max = np.array([10] * 9)  # qdd_min = R^20
-    # min ||J@q_dd + J_d@q_d - x_dd||
-
-    objective = cp.Minimize(0.5 * cp.sum_squares(J @ q_dd + J_dot @ q_d - x_dd))
-    # ic(np.diag(MM))
-    # ic(is_positive_semidefinite(MM))
+    xdot = np.zeros((6,))
+    mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_SITE, mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, "tip"), xdot, 0)
     
-    constraints = [MM @ q_dd + C <= tau_max,
-                   MM @ q_dd + C >= tau_min,
-                   q_dd <= qdd_max,
-                   q_dd >= qdd_min]
-
-
-    problem = cp.Problem(objective, constraints[2:4])
-    # ic(problem.status)
-    # ic(problem.is_dcp())
-
+    e = xr - x
+    edot = xrdot - xdot
+    
+    fq = data.qfrc_passive
+    fext = J @ fq
+    
+    xddot = xrddot + Mx_inv @ (D @ edot + K @ e - fext)
+    
+    qddot = cp.Variable(9)
+    
+    tau_max = np.array([1000] * 9)
+    tau_min = np.array([-1000] * 9)
+    qddot_max = np.array([1000] * 9)
+    qddot_min = np.array([-1000] * 9)
+    
+    objective = cp.Minimize(1/2*cp.sum_squares(J @ qddot + Jdot @ qd - xddot))
+    constraints = [MM @ qddot + C <= tau_max,
+                     MM @ qddot + C >= tau_min,
+                     qddot <= qddot_max,
+                     qddot >= qddot_min]
+    
+    problem = cp.Problem(objective,constraints[:4])
+    
     try:
-        loss = problem.solve(verbose=False)
+        loss = problem.solve(verbose=True, max_iter=100000)
     except:
-        ic(counter)
         return None
-    ic(q_dd.value)
-    
+    ic(qddot.value)
     if(loss > 5):
         print("=========================")
         print("Loss: ", loss)
         print("time: ",counter)
         print("=========================")
-    ic(counter, loss)
+    ic(loss)
+    if(loss > 1):
+        exit()
     print("end"*10)
     # ic(q_dd.value)
     # ic(constraints[0].dual_value)
-    return q_dd.value
+    return qddot.value
 
 
-# * mujoco: wxyz, normal: xyzw
 def mujoco2normal(q):
     return np.array([q[1], q[2], q[3], q[0]])
 
@@ -161,7 +149,6 @@ def slerp(x_init_quat, x_final_quat, final_n, n_steps):
     slerp = Slerp(rot_times, rots)
     times = np.linspace(0, final_n, n_steps)
     rpy = slerp(times).as_euler('xyz', degrees=False)    
-    rpy[-1, 0] *= -1
     
     rpy_dot = np.diff(rpy, axis=0) / (final_n / n_steps) # 499, 3
     rpy_ddot = np.diff(rpy_dot, axis=0) / (final_n / n_steps) # 498, 3
@@ -193,8 +180,8 @@ def quintic_pos(init_pos, final_pos, final_n, nsteps):
                               y_poly.calc_second_derivative(times),
                               z_poly.calc_second_derivative(times)]).T
 
-    return pos_ref, pos_dot_ref, pos_ddot_ref    
-    
+    return pos_ref, pos_dot_ref, pos_ddot_ref
+
 def main():
     model_path = '/home/faizal/Documents/MuJoCo-Dual-Arm/models/utils/franka_emika_panda/panda.xml'
 
@@ -226,17 +213,16 @@ def main():
     mujoco.mju_mat2Quat(end_effector_quat, end_effector_mat)
     final_end_effector_quat = np.zeros((4, ))
     final_end_effector_quat[1] = 1
-    # final_end_effector_quat[1] = 0.5
-    # final_end_effector_quat[2] = 0.5
-    # final_end_effector_quat[3] = 0.5
+    # final_end_effector_quat[1] = np.sqrt(1/2)
+    # final_end_effector_quat[2] = np.sqrt(1/2)
     
 
     x_init = data.site(force_site).xpos.reshape(-1, 1)
-    x_final = copy.deepcopy(x_init) + np.array([0.0, -0.3, -0.1]).reshape(-1, 1)
+    x_final = copy.deepcopy(x_init) + np.array([0.0, 0.2, -0.3]).reshape(-1, 1)
     
     # ic(end_effector_quat)
     # exit()
-    timesteps = 1000
+    timesteps = 2000
     
     quat_ref, quat_dot_ref, quat_ddot_ref = slerp(end_effector_quat, final_end_effector_quat, timesteps, timesteps)
     pos_ref, pos_dot_ref, pos_ddot_ref = quintic_pos(x_init, x_final, timesteps, timesteps)
@@ -245,60 +231,40 @@ def main():
     pose_dot_ref = np.concatenate([pos_dot_ref, quat_dot_ref], axis=-1) # 500, 7
     pose_ddot_ref = np.concatenate([pos_ddot_ref, quat_ddot_ref], axis=-1) # 500, 7
     
-    Traj_plot(pose_ref)
     np.save("./pose_ref.npy", pose_ref)
-    np.save('./pose_dot_ref.npy', pose_dot_ref)
-    np.save('./pose_ddot_ref.npy', pose_ddot_ref)
 
     # ic(pose_ref.shape, pose_dot_ref.shape, pose_ddot_ref.shape)
 
-    jac_prev = np.zeros((6, model.nv))
     counter = 0
 
-    K = np.diag([2000] * 3 + [2000] * 3)
-    D = 2 * np.sqrt(K) 
+    K = np.diag([1000.0] * 6)
+    D = 2 * np.sqrt(K)
     
     pbar = tqdm(total=timesteps, colour='blue')
     
     pause_sim = False
 
-    q_dd = None
-    
+
     while viewer.is_running():
         data.mocap_pos[model.body("target").mocapid[0]] = x_final.reshape(-1)
 
-        Mx_inv, MM, C, J, J_dot, fext, qpos = conv_parameters(model, data, jac_prev, dt)
-
-        jac_prev = copy.deepcopy(J)
-
-        xd = jac_prev @ data.qvel
+        Mx_inv, MM, C, J, Jdot, fext, q = params(model, data,dt)
         
         if not pause_sim and counter < timesteps:
-            q_dd = convex_optimization(model, 
-                                data, 
-                                pose_ref[counter],
-                                pose_dot_ref[counter],
-                                xd,
-                                pose_ddot_ref[counter],
-                                fext,
-                                D, K, J, J_dot, Mx_inv, MM, C, dt, counter, q_dd_prev=q_dd)
+            qddot = optimize(model,data,pose_ref[counter],pose_dot_ref[counter],pose_ddot_ref[counter],J,Jdot,K,D,Mx_inv,MM,C,counter)
             
-            
-            if q_dd is not None:
+            if qddot is not None:
                 optTau = np.zeros((9,))
-                optTau = MM @ q_dd + C
+                optTau = MM @ qddot + C
                 data.ctrl[:9] = optTau
+                
                 mujoco.mj_step(model, data)
             # pbar.update(1)  
-            
+        
         viewer.sync()
     
         # print("=" * 50)
         counter += 1
         
-    
-    
-
-
-if __name__ == "__main__":
+if __name__=="__main__":
     main()
