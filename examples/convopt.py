@@ -67,14 +67,14 @@ def main():
     Qdotrange = np.array([-180,180])
     tauRange = np.array([-1000,1000])
 
-    graspIdx=42
+    graspIdx=15
     name = "chair"
 
     grasps = np.load("examples/generatedGrasps/grasp-{}.npy".format(name))
-    graspL = grasps[graspIdx][1]
-    graspR = grasps[graspIdx][0]
+    graspL = grasps[graspIdx][0]
+    graspR = grasps[graspIdx][1]
     object_scale = 0.6
-    objStrPos = [-0.4,0.0,0.2235932541966166*object_scale]
+    objStrPos = [-0.45,0.0,0.4698006374599125*object_scale]
     objStrOri = [0,0,0]
 
     init_pose_L = Util.eefPose(data,"end_effector")

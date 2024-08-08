@@ -1,9 +1,9 @@
 parameters:
   ACD:
-    Mujoco_scale: 1
-    minZ: 0.2235932541966166
-  name: table
+    Mujoco_scale: 0.6
+    minZ: 0.4698006374599125
+  name: chair
   pnp:
-    grasp_idx: 56
+    grasp_idx: 15
     tolerance: 0.6
     visual: 'True'

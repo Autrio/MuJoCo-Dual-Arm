@@ -55,3 +55,27 @@ class RotationUtils:
 
         preGraspPose = [offsetPos.tolist(),[qw,qx,qy,qz]]
         return preGraspPose
+
+    def safe_matrix_sqrt(self,matrix):
+        # Eigenvalue decomposition
+        eigvals, eigvecs = np.linalg.eigh(matrix)
+        
+        # Take square root of the absolute values of the eigenvalues
+        sqrt_eigvals = np.sqrt(np.abs(eigvals))
+        
+        # Reconstruct the square root of the matrix
+        sqrt_matrix = eigvecs @ np.diag(sqrt_eigvals) @ eigvecs.T
+        
+        return sqrt_matrix
+
+    def compute_damping_matrices(self, MxL, MxR, K):
+        # Compute the square roots using the safe square root function
+        sqrt_MxL = self.safe_matrix_sqrt(MxL)
+        sqrt_MxR = self.safe_matrix_sqrt(MxR)
+        sqrt_K = np.sqrt(K)  # K has no negative eigenvalues
+        
+        # Compute the damping matrices
+        DL = sqrt_MxL @ sqrt_K + sqrt_K @ sqrt_MxL
+        DR = sqrt_MxR @ sqrt_K + sqrt_K @ sqrt_MxR
+
+        return DL, DR

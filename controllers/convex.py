@@ -5,12 +5,14 @@ import numpy as np
 import time
 from scipy.spatial.transform import Rotation as R
 import matplotlib.pyplot as plt
+from .utils.utils import *
 
 class Convex:
     def __init__(self,model,data,viewer):
         self.model = model
         self.data = data
         self.viewer = viewer
+        self.util = RotationUtils()
 
     def resetViewer(self,flag):
         # Reset the simulation.
@@ -186,10 +188,12 @@ class Convex:
 
         # self.D = np.sqrt(self.Mx) @np.sqrt(self.K) + np.sqrt(self.K)@np.sqrt(self.Mx)
         # self.DL = np.sqrt(self.MxL) @ np.sqrt(self.K) + np.sqrt(self.K) @ np.sqrt(self.MxL)   
-        # self.DR = np.sqrt(self.MxR) @ np.sqrt(self.K) + np.sqrt(self.K) @ np.sqrt(self.MxR)   
+        # self.DR = np.sqrt(self.MxR) @ np.sqrt(self.K) + np.sqrt(self.K) @ np.sqrt(self.MxR)  
+        
+        self.DL, self.DR = self.util.compute_damping_matrices(self.MxL, self.MxR, self.K) 
 
-        self.DL = 2*np.sqrt(self.K)
-        self.DR = 2*np.sqrt(self.K)
+        # self.DL = 2*np.sqrt(self.K)
+        # self.DR = 2*np.sqrt(self.K)
 
         self.qL = self.data.qpos[self.dof_ids[:9]]
         self.qLdot = self.data.qvel[self.dof_ids[:9]]
