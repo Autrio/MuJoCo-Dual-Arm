@@ -255,7 +255,7 @@ class Convex:
             self.tauR = self.MR @ self.qRddot.value + self.hR
             self.data.ctrl[9:18] = self.tauR
             
-        # self.gripperCtrl("open","both")
+        self.gripperCtrl("open","both")
         # return self.qLddot.value, self.qRddot.value
         return self.loss
     

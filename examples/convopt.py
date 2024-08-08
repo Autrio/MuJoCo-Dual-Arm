@@ -67,13 +67,13 @@ def main():
     Qdotrange = np.array([-180,180])
     tauRange = np.array([-1000,1000])
 
-    graspIdx=56
+    graspIdx=42
     name = "chair"
 
     grasps = np.load("examples/generatedGrasps/grasp-{}.npy".format(name))
     graspL = grasps[graspIdx][1]
     graspR = grasps[graspIdx][0]
-    object_scale = 1
+    object_scale = 0.6
     objStrPos = [-0.4,0.0,0.2235932541966166*object_scale]
     objStrOri = [0,0,0]
 
@@ -111,6 +111,7 @@ def main():
     DtrajR_pre = create_quintic_trajectory(init_pose_R, pre_grasp_pose_R, 1500)
 
     i = 0
+    j = 0
     stage = 1
     loss = []
 
@@ -132,6 +133,18 @@ def main():
 
                 DtrajL = create_quintic_trajectory(current_pose_L,final_pose_L, 1500)
                 DtrajR = create_quintic_trajectory(current_pose_R,final_pose_R, 1500)
+
+            if(j <= 1500 and stage == 2):
+                data.mocap_pos[controller.mocap_idL] = DtrajL[j][:3]
+                data.mocap_quat[controller.mocap_idL] = DtrajL[j][3:]
+                data.mocap_pos[controller.mocap_idR] = DtrajR[j][:3]
+                data.mocap_quat[controller.mocap_idR] = DtrajR[j][3:]
+                j += 1
+                if(j == 1500):
+                    stage += 1
+                    logger.info("Initialising Stage Change: GRASP----->ASCEND")
+                    current_pose_L = (list(data.mocap_pos[controller.mocap_idL]), list(data.mocap_quat[controller.mocap_idL]))
+                    current_pose_R = (list(data.mocap_pos[controller.mocap_idR]), list(data.mocap_quat[controller.mocap_idR]))
 
         lossT = controller.optimize(postBias,velBias,jacPL,jacPR,Wimp,Wpos,Qrange,Qdotrange,tauRange)
         loss.append(lossT)
