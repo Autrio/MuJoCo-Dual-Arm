@@ -213,8 +213,8 @@ class Convex:
         self.F2 = self.DR @ self.twistR + self.K @ self.PosErrR
 
 
-        self.EimpL = (self.JL @ self.qLddot) + (self.JLdot @ self.qLdot) - (self.MxL_inv @ self.F1)
-        self.EimpR = (self.JR @ self.qRddot) + (self.JRdot @ self.qRdot) - (self.MxR_inv @ self.F2)
+        self.EimpL = self.JL @ self.qLddot + self.JLdot @ self.qLdot - self.MxL_inv @ self.F1
+        self.EimpR = self.JR @ self.qRddot + self.JRdot @ self.qRdot - self.MxR_inv @ self.F2
 
         self.EposL = self.qLddot - self.betaL
         self.EposR = self.qRddot - self.betaR
@@ -224,27 +224,29 @@ class Convex:
                                         + Wpos * cvxpy.sum_squares(self.EposL) + Wpos * cvxpy.sum_squares(self.EposR))
 
         self.constraints = [0.5 * self.qLddot * self.dt**2 + self.qLdot * self.dt + self.qL <= Qrange[1],
+                            0.5 * self.qRddot * self.dt**2 + self.qRdot * self.dt + self.qR <= Qrange[1],
                             0.5 * self.qLddot * self.dt**2 + self.qLdot * self.dt + self.qL >= Qrange[0],
+                            0.5 * self.qRddot * self.dt**2 + self.qRdot * self.dt + self.qR >= Qrange[0],
+
                             self.qLddot*self.dt + self.qLdot <= Qdotrange[1],
+                            self.qRddot*self.dt + self.qRdot <= Qdotrange[1],
                             self.qLddot*self.dt + self.qLdot >= Qdotrange[0],
+                            self.qRddot*self.dt + self.qRdot >= Qdotrange[0],
+
                             self.ML @ self.qLddot + self.hL <= tauRange[1],
                             self.ML @ self.qLddot + self.hL >= tauRange[0],
-                            
-                            0.5 * self.qRddot * self.dt**2 + self.qRdot * self.dt + self.qR <= Qrange[1],
-                            0.5 * self.qRddot * self.dt**2 + self.qRdot * self.dt + self.qR >= Qrange[0],
-                            self.qRddot*self.dt + self.qRdot <= Qdotrange[1],
-                            self.qRddot*self.dt + self.qRdot >= Qdotrange[0],
                             self.MR @ self.qRddot + self.hR <= tauRange[1],
                             self.MR @ self.qRddot + self.hR >= tauRange[0]
                             ]
-        self.problem = cvxpy.Problem(self.objective,self.constraints[:1])
+        
+        self.problem = cvxpy.Problem(self.objective,self.constraints)
         
         try:
             self.loss = self.problem.solve(verbose=False)
             print("============LOSS===========: ",self.loss)
         except:
             print("----------------------infeasible-------------------------------------")
-            return None
+            exit(0)
         
         if(self.qLddot.value.all() != None or self.qRddot.value.all() != None):
             self.tauL = self.ML @ self.qLddot.value + self.hL
@@ -253,5 +255,25 @@ class Convex:
             self.tauR = self.MR @ self.qRddot.value + self.hR
             self.data.ctrl[9:18] = self.tauR
             
-        return self.qLddot.value, self.qRddot.value
+        # self.gripperCtrl("open","both")
+        # return self.qLddot.value, self.qRddot.value
+        return self.loss
     
+    def gripperCtrl(self,state,eef):
+        if eef=="both":
+            if(state=="open"):
+                self.data.ctrl[7:9]=10;   #open L gripper
+                self.data.ctrl[16:18]=0.04; #open R gripper
+            elif(state=="close"):
+                self.data.ctrl[7:9]=0.0;   #close L gripper
+                self.data.ctrl[16:18]=0.0; #close R gripper
+        if eef=="left":
+            if(state=="open"):
+                self.data.ctrl[7:9]=0.04;   #open L gripper
+            elif(state=="close"):
+                self.data.ctrl[7:9]=0.0;   #close L gripper
+        if eef=="right":
+            if(state=="open"):
+                self.data.ctrl[16:18]=0.04; #open R gripper
+            elif(state=="close"):
+                self.data.ctrl[16:18]=0.0; #close R gripper
