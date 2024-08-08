@@ -4,7 +4,7 @@ import numpy as np
 import time
 import argparse as ap
 import matplotlib.pyplot as plt
-from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Rotation as R, Slerp
 
 
 def pre_grasp_pose(grasp_pose, r, grasp_axis_local):
@@ -57,18 +57,80 @@ class QuinticPolynomial:
         return xs
 
     def calc_first_derivative(self, s):
-        xs = self.a_1 + 2 * self.a_2 * s + 3 * self.a_3 * s ** 2 + 4 * self.a_4 * s ** 3 + 5 * self.a_5 * s ** 4
+        xs = self.a_1 + (2 * self.a_2 * s) + (3 * self.a_3 * (s ** 2)) + \
+        (4 * self.a_4 * (s ** 3)) + (5 * self.a_5 * (s ** 4))
         return xs
 
     def calc_second_derivative(self, s):
-        xs = 2 * self.a_2 + 6 * self.a_3 * s + 12 * self.a_4 * s ** 2 + 20 * self.a_5 * s ** 3
+        xs = 2 * self.a_2 + 6 * self.a_3 * s + 12 * self.a_4 * (s ** 2) + 20 * self.a_5 * (s ** 3)
         return xs
 
     def calc_third_derivative(self, s):
-        xs = 6 * self.a_3 + 24 * self.a_4 * s + 60 * self.a_5 * s ** 2
+        xs = 6 * self.a_3 + 24 * self.a_4 * s + 60 * self.a_5 * (s ** 2)
         return xs
 
+# * mujoco: wxyz, normal: xyzw
+def mujoco2normal(q):
+    return np.array([q[1], q[2], q[3], q[0]])
+
+def normal2mujoco(q):
+    return np.array([q[3], q[0], q[1], q[2]])
+
+
+
+    
+def slerp(x_init_quat, x_final_quat, final_n, n_steps):
+    # X_init_quat = mujoco2normal(x_init_quat)
+    # X_final_quat = mujoco2normal(x_final_quat)
+    
+    X_init_quat = (x_init_quat)
+    X_final_quat = (x_final_quat)
+    
+
+    rot_times = np.array([0, final_n])
+    rots = R.from_quat([X_init_quat, X_final_quat])
+ 
+    
+    slerp = Slerp(rot_times, rots)
+    times = np.linspace(0, final_n, n_steps)
+    
+    # Perform the interpolation and convert the result back to MuJoCo format
+    interpolated_rots = slerp(times)
+    interpolated_quats = interpolated_rots.as_quat()
+    
+    # Convert the interpolated quaternions back to MuJoCo format
+    mujoco_quats = np.array([normal2mujoco(q) for q in interpolated_quats])
+    
+    return mujoco_quats
+  
+
 def create_quintic_trajectory(init_pose, final_pose, steps):
+    traj = []
+    
+    init_quat = np.array([init_pose[1][0],init_pose[1][1],init_pose[1][2],init_pose[1][3]])  #xyzw normal !# CHECK IF MOCAP IS XYZW
+    final_quat = np.array([final_pose[1][0],final_pose[1][1],final_pose[1][2],final_pose[1][3]])
+   
+    x_poly = QuinticPolynomial(init_pose[0][0], 0, 0, final_pose[0][0], 0, 0, steps)
+    y_poly = QuinticPolynomial(init_pose[0][1], 0, 0, final_pose[0][1], 0, 0, steps)
+    z_poly = QuinticPolynomial(init_pose[0][2], 0, 0, final_pose[0][2], 0, 0, steps)
+    
+    q = slerp(init_quat,final_quat,steps,steps)
+
+    
+    for i in range(steps):
+        pos = [x_poly.calc_point(i), y_poly.calc_point(i), z_poly.calc_point(i)]
+        quat = q[i].tolist()
+      
+        traj.append([pos, quat])
+      
+    return traj
+
+ 
+
+    
+    
+
+# def create_quintic_trajectory(init_pose, final_pose, steps):
     traj = []
 
     # Position interpolation
@@ -87,7 +149,9 @@ def create_quintic_trajectory(init_pose, final_pose, steps):
         quat = [qx_poly.calc_point(i), qy_poly.calc_point(i), qz_poly.calc_point(i), qw_poly.calc_point(i)]
         quat /= np.linalg.norm(quat)  # Normalize quaternion to ensure it remains valid
         traj.append(pos + quat.tolist())
-    return traj
+
+    
+    return traj, 
 
 def generate_end_effector_trajectories(object_trajectory, current_obj_pose, current_pose_L, current_pose_R):
     AtrajL = []
