@@ -7,11 +7,11 @@ from scipy.spatial.transform import Rotation as R
 import logging 
 
 
-from controllers.convex import Convex
-from controllers.utils.QuinticPolynomial import *
-from controllers.utils.utils import *
+from controller.convex_dual import Convex
+from controller.QuinticPolynomial import *
+from controller.utils import *
 
-model_path = "/home/autrio/college-linx/RRC/MuJoCo-Dual-Arm/models/dual_panda.xml";
+model_path = "./models_dual/dual_panda.xml";
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -106,9 +106,13 @@ def main():
     
     # pre_grasp_pose_L = ([-0.10, 0.33, 0.518],[0, 0, 1, 0]) 
     # pre_grasp_pose_R = ([0.03, 0.33, 0.518], [0, 1, 0, 0])
+    print("init",init_pose_L[0][0])
+    print("="*20)
 
     DtrajL_pre = create_quintic_trajectory(init_pose_L, pre_grasp_pose_L, 1500)
     DtrajR_pre = create_quintic_trajectory(init_pose_R, pre_grasp_pose_R, 1500)
+    print("Traj",DtrajL_pre[0][0])
+    print("="*20)
 
     i = 0
     stage = 1
